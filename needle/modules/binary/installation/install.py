@@ -25,7 +25,7 @@ class Module(BaseModule):
         src = self.options['ipa']
         dst = self.device.remote_op.build_temp_path_for_file("app.ipa")
         # Upload binary to device
-        self.printer.verbose("Uploading binary: %s" % src)
+        self.printer.verbose(f"Uploading binary: {src}")
         self.device.remote_op.upload(src, dst)
         # Install
         self.printer.verbose("Installing binary...")

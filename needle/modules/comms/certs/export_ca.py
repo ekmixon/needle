@@ -31,9 +31,8 @@ class Module(BaseModule):
         self.truststore_path = Constants.DEVICE_PATH_TRUST_STORE
         if not self.device.remote_op.file_exist(self.truststore_path):
             raise Exception("TrustStore file not found on device!")
-        else:
-            self.db = self.local_op.build_output_path_for_file("TrustStore.sqlite3", self)
-            self.device.pull(self.truststore_path, self.db)
+        self.db = self.local_op.build_output_path_for_file("TrustStore.sqlite3", self)
+        self.device.pull(self.truststore_path, self.db)
 
     # ==================================================================================================================
     # RUN
@@ -55,4 +54,4 @@ class Module(BaseModule):
         tstore.export_certificates(certificate_base_filename)
         if self.options['fulldata']:
             tstore.export_certificates_data(certificate_data_base_filename)
-        self.printer.notify("Certificates exported in: %s" % folder_out)
+        self.printer.notify(f"Certificates exported in: {folder_out}")

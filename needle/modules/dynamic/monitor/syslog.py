@@ -22,7 +22,10 @@ class Module(BackgroundModule):
         self.options['output'] = self.local_op.build_output_path_for_file("syslog.txt", self)
         # Setting default filter
         if self.APP_METADATA:
-            self.printer.info('Setting filter to: %s (you can change it in options)' % self.APP_METADATA['binary_name'])
+            self.printer.info(
+                f"Setting filter to: {self.APP_METADATA['binary_name']} (you can change it in options)"
+            )
+
             self.options['filter'] = self.APP_METADATA['binary_name']
 
     def module_pre(self):
@@ -34,7 +37,7 @@ class Module(BackgroundModule):
     def module_run(self):
         # Prepare paths
         self.path_remote = self.device.remote_op.build_temp_path_for_file('syslog')
-        self.path_local = self.options['output'] if self.options['output'] else None
+        self.path_local = self.options['output'] or None
 
         # Build cmd
         cmd = '{app}'.format(app=self.device.DEVICE_TOOLS['ONDEVICECONSOLE'])
@@ -54,5 +57,8 @@ class Module(BackgroundModule):
 
         # Show output
         self.local_op.cat_file(self.path_local)
-        self.printer.info("A copy of the output has been saved at the following location: %s" % self.path_local)
+        self.printer.info(
+            f"A copy of the output has been saved at the following location: {self.path_local}"
+        )
+
         self.add_issue('Syslog', None, 'INVESTIGATE', self.path_local)

@@ -23,13 +23,12 @@ class Module(BaseModule):
                                               query=query,
                                               app=self.APP_METADATA['binary_path'])
         if grep: cmd = '%s | grep -Ei "%s"' % (cmd, grep)
-        out = self.device.remote_op.command_blocking(cmd)
-        return out
+        return self.device.remote_op.command_blocking(cmd)
 
     def __check_flag(self, line, flagname, flag):
         """Extract result of the test."""
         tst = filter(lambda el: re.search(flag, el), line)
-        res = True if tst and len(tst) > 0 else False
+        res = bool(tst and len(tst) > 0)
         self.tests[flagname] = res
 
     # ==================================================================================================================
@@ -70,4 +69,4 @@ class Module(BaseModule):
                     self.printer.notify('\t{:>20}: {}{:<30}{}'.format(name, Colors.G, 'OK', Colors.N))
                 else:
                     self.printer.error('\t{:>20}: {}{:<30}{}'.format(name, Colors.R, 'NO', Colors.N))
-                    self.add_issue('Compilation check', '{}: NO'.format(name), 'HIGH', None)
+                    self.add_issue('Compilation check', f'{name}: NO', 'HIGH', None)

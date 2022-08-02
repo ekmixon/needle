@@ -32,14 +32,11 @@ class BaseModule(Framework):
     # OPTIONS METHODS
     # ==================================================================================================================
     def _get_source(self, params, query=None):
-        if os.path.exists(params):
-            sources = open(params).read().split()
+        sources = open(params).read().split() if os.path.exists(params) else [params]
+        if source := [Utils.to_unicode(x) for x in sources]:
+            return source
         else:
-            sources = [params]
-        source = [Utils.to_unicode(x) for x in sources]
-        if not source:
             raise FrameworkException('Source contains no input.')
-        return source
 
     # ==================================================================================================================
     # SHOW METHODS
@@ -55,7 +52,7 @@ class BaseModule(Framework):
                 nums = [str(x) for x in range(1, len(content)+1)]
                 num_len = len(max(nums, key=len))
                 for num in nums:
-                    print('%s|%s' % (num.rjust(num_len), content[int(num)-1]), end='')
+                    print(f'{num.rjust(num_len)}|{content[int(num)-1]}', end='')
         else:
             self.printer.info('Show source not available for this module.')
 
@@ -64,32 +61,35 @@ class BaseModule(Framework):
         # Meta info
         for item in ['name', 'path', 'author', 'version']:
             if item in self.meta:
-                print('%s%s%s: %s' % (Colors.O, item.title().rjust(10), Colors.N, self.meta[item]))
+                print(f'{Colors.O}{item.title().rjust(10)}{Colors.N}: {self.meta[item]}')
         print('')
         # Description
         if 'description' in self.meta:
-            print('%sDescription:%s' % (Colors.O, Colors.N))
+            print(f'{Colors.O}Description:{Colors.N}')
             print('%s%s' % (self.spacer, textwrap.fill(self.meta['description'], 100, subsequent_indent=self.spacer)))
             print('')
         # Comments
         if 'comments' in self.meta:
-            print('%sComments:%s' % (Colors.O, Colors.N))
+            print(f'{Colors.O}Comments:{Colors.N}')
             for comment in self.meta['comments']:
                 prefix = '* '
                 if comment.startswith('\t'):
-                    prefix = self.spacer+'- '
+                    prefix = f'{self.spacer}- '
                     comment = comment[1:]
                 print('%s%s' % (self.spacer, textwrap.fill(prefix+comment, 100, subsequent_indent=self.spacer)))
             print('')
         # Options
-        print('%sOptions:%s' % (Colors.O, Colors.N), end='')
+        print(f'{Colors.O}Options:{Colors.N}', end='')
         self.show_options()
         # sources
         if hasattr(self, '_default_source'):
-            print('%sSource Options:%s' % (Colors.O, Colors.N))
-            print('%s%s%s' % (self.spacer, 'default'.ljust(15), self._default_source))
-            print('%s%sstring representing a single input' % (self.spacer, '<string>'.ljust(15)))
-            print('%s%spath to a file containing a list of inputs' % (self.spacer, '<path>'.ljust(15)))
+            print(f'{Colors.O}Source Options:{Colors.N}')
+            print(f"{self.spacer}{'default'.ljust(15)}{self._default_source}")
+            print(f"{self.spacer}{'<string>'.ljust(15)}string representing a single input")
+            print(
+                f"{self.spacer}{'<path>'.ljust(15)}path to a file containing a list of inputs"
+            )
+
             print('')
 
     def show_globals(self):
@@ -126,7 +126,10 @@ class BaseModule(Framework):
         """Execute before module_run"""
         # Setup local output folder
         if not self._local_ready:
-            self.printer.debug("Setup local output folder: {}".format(self._global_options['output_folder']))
+            self.printer.debug(
+                f"Setup local output folder: {self._global_options['output_folder']}"
+            )
+
             self.local_op.output_folder_setup(self)
             self._local_ready = Framework._local_ready = True
         # If it's a StaticModule, bypass any other check
@@ -140,13 +143,12 @@ class BaseModule(Framework):
         # Check if the module has been disabled for the current iOS version
         disabled_for_version = Constants.MODULES_DISABLED.get(self.device._ios_version)
         if disabled_for_version and self._modulename in disabled_for_version:
-            raise FrameworkException('This module is not currently supported by the iOS version of the device in use (iOS {})'.format(self.device._ios_version))
+            raise FrameworkException(
+                f'This module is not currently supported by the iOS version of the device in use (iOS {self.device._ios_version})'
+            )
+
         # If not specified to bypass app check
-        if not bypass_app:
-            # Check target app, otherwise launch wizard
-            if self.app_check() is None: return None
-        # Everything set
-        return 1
+        return None if not bypass_app and self.app_check() is None else 1
 
     def module_run(self):
         """Actual execution."""
@@ -199,9 +201,11 @@ class BaseModule(Framework):
     def validate_editor(self):
         """Check that the user entered a recognised editor in the PROGRAM option by seeing if it exists in the TOOLS_LOCAL directory."""
         if self.options['program'] in self.TOOLS_LOCAL:
-             self.editor = self.TOOLS_LOCAL[self.options['program']]
+            self.editor = self.TOOLS_LOCAL[self.options['program']]
         else:
-            raise FrameworkException('The Editing program specified ("{}") is not supported.'.format(self.options['program']))
+            raise FrameworkException(
+                f"""The Editing program specified ("{self.options['program']}") is not supported."""
+            )
 
     def add_issue(self, name, content, confidence, outfile):
         """Wrapper for ISSUE_MANAGER.issue_add, which automatically fills the 'app' and 'module' fields."""
@@ -247,10 +251,9 @@ class DebugModule(BaseModule):
                 self.printer.info("Setting up local port forwarding to enable communications with the Debug server...")
                 self.device._portforward_debug_start()
                 time.sleep(1)
-                return 1
             else:
                 self.printer.info("Local port forwarding to enable communications with the Debug server already setup")
-                return 1
+            return 1
         return res
 
     def module_post(self):
@@ -270,10 +273,9 @@ class FridaModule(BaseModule):
                 self.printer.info("Setting up local port forwarding to enable communications with the Frida server...")
                 self.device._portforward_frida_start()
                 time.sleep(1)
-                return 1
             else:
                 self.printer.info("Local port forwarding to enable communications with the Frida server already setup")
-                return 1
+            return 1
         return res
 
     def module_post(self):
@@ -298,18 +300,19 @@ class FridaScript(FridaModule):
             self.printer.info("Spawning the app...")
             pid = device.spawn([self.APP_METADATA['bundle_id']])
             # Attaching to the process
-            self.printer.info("Attaching to process: %s" % pid)
+            self.printer.info(f"Attaching to process: {pid}")
             self.session = device.attach(pid)
             if self.options['resume']:
                 self.printer.verbose("Resuming the app's process...")
                 device.resume(pid)
+
         def launch_attach():
             # Launching the app
             self.printer.info("Launching the app...")
             self.device.app.open(self.APP_METADATA['bundle_id'])
             pid = int(self.device.app.search_pid(self.APP_METADATA['binary_name']))
             # Attaching to the process
-            self.printer.info("Attaching to process: %s" % pid)
+            self.printer.info(f"Attaching to process: {pid}")
             self.session = device.attach(pid)
 
         # Run FridaModule setup function

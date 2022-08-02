@@ -27,7 +27,7 @@ class Module(BaseModule):
         BaseModule.__init__(self, params)
 
     def compute_checksum(self, kind):
-        cmd = "{} {}".format(kind, self.path)
+        cmd = f"{kind} {self.path}"
         out = self.device.remote_op.command_blocking(cmd)
         checksum = out[0].split(" ")[0]
         self.RES[kind] = checksum

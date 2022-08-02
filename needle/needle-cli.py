@@ -35,7 +35,7 @@ def launch_cli(args):
     # ==================================================================================================================
     # Run given global commands
     for command in args.global_commands:
-        printer.notify('GLOBAL COMMAND => {}'.format(command))
+        printer.notify(f'GLOBAL COMMAND => {command}')
         x.onecmd(command)
     # Set given global options
     for option in args.goptions:
@@ -57,7 +57,7 @@ def launch_cli(args):
             if not y:
                 printer.error('Module loading failed, skipping')
                 continue
-            printer.notify('MODULE => {}'.format(m['module']))
+            printer.notify(f"MODULE => {m['module']}")
             # Set given module options
             for option in m['options']:
                 param = ' '.join(option.split('='))

@@ -74,7 +74,7 @@ class Module(BaseModule):
         for el in out:
             fname = el.strip()
             sc.append(fname)
-            self.printer.notify('\t{}'.format(fname))
+            self.printer.notify(f'\t{fname}')
 
         # Pull files & show image
         self.show_image(sc)

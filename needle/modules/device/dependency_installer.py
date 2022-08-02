@@ -28,7 +28,7 @@ class Module(BaseModule):
         installable = dict([(k, v) for k, v in tools.iteritems()
                             if v['PACKAGES'] is not None or v['LOCAL'] is not None or v['SETUP'] is not None])
         for t in installable:
-            opt = (t, False, True, 'Set to True to install: {}.'.format(t))
+            opt = t, False, True, f'Set to True to install: {t}.'
             self.register_option(*opt)
 
     def module_pre(self):
@@ -42,21 +42,27 @@ class Module(BaseModule):
             cmd = '{apt} update'.format(apt=Constants.DEVICE_TOOLS['APT-GET'])
             self.device.remote_op.command_blocking(cmd, internal=True)
         except Exception as e:
-            self.device.printer.warning('Error occurred during apt-get update: %s' % e.message.strip())
+            self.device.printer.warning(
+                f'Error occurred during apt-get update: {e.message.strip()}'
+            )
+
             self.device.printer.warning('Trying to continue anyway...')
 
     def __apt_add_repo(self, repo):
         """Add the specified repo to cydia.list."""
         if repo in self._cydialist:
-            self.device.printer.debug('Repo already in cydia.list: %s' % repo)
+            self.device.printer.debug(f'Repo already in cydia.list: {repo}')
             return
         try:
-            self.device.printer.debug('Adding repo to cydia.list: %s' % repo)
+            self.device.printer.debug(f'Adding repo to cydia.list: {repo}')
             cmd = 'echo "deb {repo} ./" >> {cydialist}'.format(repo=repo, cydialist=Constants.CYDIA_LIST)
             self.device.remote_op.command_blocking(cmd, internal=True)
             self.__apt_update()
         except Exception as e:
-            self.device.printer.warning('Error occurred while adding a new repo: %s' % e.message.strip())
+            self.device.printer.warning(
+                f'Error occurred while adding a new repo: {e.message.strip()}'
+            )
+
             self.device.printer.warning('Trying to continue anyway...')
 
     def __apt_install(self, package):
@@ -69,9 +75,9 @@ class Module(BaseModule):
         packages, repo = tool['PACKAGES'], tool['REPO']
         for pk in packages:
             if pk in self._packagelist:
-                self.device.printer.debug('[INSTALL] Already installed: %s.' % pk)
+                self.device.printer.debug(f'[INSTALL] Already installed: {pk}.')
             else:
-                self.device.printer.verbose('[INSTALL] Installing %s via apt-get.' % toolname)
+                self.device.printer.verbose(f'[INSTALL] Installing {toolname} via apt-get.')
                 if repo: self.__apt_add_repo(repo)
                 self.__apt_install(pk)
 
@@ -82,20 +88,20 @@ class Module(BaseModule):
         """Return true if the tool is installed on the device."""
         cmd = '{which} {tool}'.format(which=Constants.DEVICE_TOOLS['WHICH'], tool=tool)
         out = self.device.remote_op.command_blocking(cmd, internal=True)
-        return True if out else False
+        return bool(out)
 
     def __install_local(self, toolname, tool):
         """Push the binary from the workstation to the device"""
         local, command = tool['LOCAL'], tool['COMMAND']
         name = Utils.extract_filename_from_path(command)
         if not self.__is_tool_available(name):
-            self.device.printer.verbose('[INSTALL] Manually installing: %s' % toolname)
+            self.device.printer.verbose(f'[INSTALL] Manually installing: {toolname}')
             src = local
             dst = Utils.path_join('/usr/bin/', name)
             self.device.push(src, dst)
             self.device.remote_op.chmod_x(dst)
         else:
-            self.device.printer.debug('[INSTALL] Tool already available: %s' % toolname)
+            self.device.printer.debug(f'[INSTALL] Tool already available: {toolname}')
 
     # ==================================================================================================================
     #  INSTALL COMMANDS
@@ -103,7 +109,7 @@ class Module(BaseModule):
     def __install_commands(self, toolname, tool):
         """Use a list of commands to install the tool"""
         local, setup = tool['LOCAL'], tool['SETUP']
-        self.device.printer.verbose('[INSTALL] Manually installing: %s' % toolname)
+        self.device.printer.verbose(f'[INSTALL] Manually installing: {toolname}')
         for cmd in setup:
             self.device.remote_op.command_blocking(cmd)
 
@@ -115,7 +121,7 @@ class Module(BaseModule):
         self.device.printer.info("Checking prerequisites...")
         for tool in Constants.DEVICE_SETUP['PREREQUISITES']:
             if not self.__is_tool_available(tool):
-                self.device.printer.error('Prerequisite Not Found: %s ' % tool)
+                self.device.printer.error(f'Prerequisite Not Found: {tool} ')
                 raise Exception('Please install the requirements listed in the project WIKI')
 
     def _refresh_package_list(self):
@@ -147,9 +153,15 @@ class Module(BaseModule):
                 # Use list of commands
                 self.__install_commands(toolname, tool)
             else:
-                self.device.printer.debug('Installation method not provided for %s. Skipping' % toolname)
+                self.device.printer.debug(
+                    f'Installation method not provided for {toolname}. Skipping'
+                )
+
         except Exception as e:
-            self.device.printer.warning('Error occurred during installation of tools: %s' % e.message.strip())
+            self.device.printer.warning(
+                f'Error occurred during installation of tools: {e.message.strip()}'
+            )
+
             self.device.printer.warning('Trying to continue anyway...')
 
     # ==================================================================================================================
@@ -175,7 +187,10 @@ class Module(BaseModule):
             to_install = [k.upper() for k, v in self.options.iteritems() if v]
         if 'ALL' in to_install:
             to_install.remove('ALL')
-        self.printer.info('The following tools are going to be installed: {}'.format(to_install))
+        self.printer.info(
+            f'The following tools are going to be installed: {to_install}'
+        )
+
 
         # Configure tools
         if choose_boolean('Do you want to continue?'):

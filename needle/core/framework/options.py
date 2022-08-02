@@ -32,15 +32,9 @@ class Options(dict):
             try:
                 value = fn(value)
                 break
-            except ValueError:
+            except (ValueError, KeyError, AttributeError):
                 pass
-            except KeyError:
-                pass
-            except AttributeError:
-                pass
-        if type(value) is int and '.' in str(orig):
-            return float(orig)
-        return value
+        return float(orig) if type(value) is int and '.' in str(orig) else value
 
     def init_option(self, name, value=None, required=False, description=''):
         self[name] = value
@@ -48,7 +42,4 @@ class Options(dict):
         self.description[name] = description
 
     def serialize(self):
-        data = {}
-        for key in self:
-            data[key] = self[key]
-        return data
+        return {key: self[key] for key in self}

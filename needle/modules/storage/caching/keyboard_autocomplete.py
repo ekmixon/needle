@@ -32,14 +32,11 @@ class Module(BaseModule):
 
         # Run Strings
         cmd = '{bin} {dirs_str} -type f \( -iname "*dynamic-text.dat" -o' \
-              ' -iname "dynamic.dat" -o -iname "lexicon.dat" \) ' \
-              '-exec {strings} {{}} \;'.format(bin=self.device.DEVICE_TOOLS['FIND'],
+                  ' -iname "dynamic.dat" -o -iname "lexicon.dat" \) ' \
+                  '-exec {strings} {{}} \;'.format(bin=self.device.DEVICE_TOOLS['FIND'],
                                                dirs_str="/var/mobile/Library/Keyboard/",
                                                strings=self.device.DEVICE_TOOLS['STRINGS'])
-        out = self.device.remote_op.command_blocking(cmd)
-
-        # Print output
-        if out:
+        if out := self.device.remote_op.command_blocking(cmd):
             self.printer.notify("The following content has been found:")
             self.print_cmd_output(out, self.options['output'])
             self.add_issue('Content of Keyboard Autocomplete', None, 'INVESTIGATE', self.options['output'])

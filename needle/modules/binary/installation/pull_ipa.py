@@ -19,7 +19,12 @@ class Module(BaseModule):
     def __init__(self, params):
         BaseModule.__init__(self, params)
         # Setting default output file
-        fname_ipa = '%s.ipa' % self.APP_METADATA['bundle_id'] if self.APP_METADATA else 'app.ipa'
+        fname_ipa = (
+            f"{self.APP_METADATA['bundle_id']}.ipa"
+            if self.APP_METADATA
+            else 'app.ipa'
+        )
+
         self.options['output'] = self.local_op.build_output_path_for_file(fname_ipa, self)
 
     # ==================================================================================================================
@@ -27,7 +32,7 @@ class Module(BaseModule):
     # ==================================================================================================================
     def module_run(self):
         # IPA filename
-        fname_ipa = '%s.ipa' % self.APP_METADATA['bundle_id']
+        fname_ipa = f"{self.APP_METADATA['bundle_id']}.ipa"
         fname_remote = self.device.remote_op.build_temp_path_for_file(fname_ipa)
         fname_local_ipa = self.options['output']
 

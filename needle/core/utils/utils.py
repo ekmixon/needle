@@ -69,9 +69,8 @@ class Utils(object):
     @staticmethod
     def to_unicode(obj, encoding='utf-8'):
         """Checks if obj is a unicode string and converts if not."""
-        if isinstance(obj, basestring):
-            if not isinstance(obj, unicode):
-                obj = unicode(obj, encoding)
+        if isinstance(obj, basestring) and not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
         return obj
 
     @staticmethod
@@ -82,8 +81,8 @@ class Utils(object):
     @staticmethod
     def regex_remove_control_chars(text):
         """Remove non-printable characters from string."""
-        control_chars = ''.join(map(unichr, range(0, 32) + range(127, 160)))
-        control_char_re = re.compile('[%s]' % re.escape(control_chars))
+        control_chars = ''.join(map(unichr, range(32) + range(127, 160)))
+        control_char_re = re.compile(f'[{re.escape(control_chars)}]')
         return control_char_re.sub('', text)
 
     # ==================================================================================================================
@@ -94,7 +93,7 @@ class Utils(object):
         """Given any number of dicts, shallow copy and merge into a new dict."""
         result = {}
         for dictionary in dict_args:
-            result.update(dictionary)
+            result |= dictionary
         return result
 
     @staticmethod

@@ -91,7 +91,7 @@ class Framework(cmd.Cmd):
         if Framework._load:
             print('\r', end='')
         if Framework._script:
-            print('%s' % line)
+            print(f'{line}')
         if Framework._record:
             recorder = codecs.open(Framework._record, 'ab', encoding='utf-8')
             recorder.write(('%s\n' % line).encode('utf-8'))
@@ -115,12 +115,11 @@ class Framework(cmd.Cmd):
         self.lastcmd = line
         if cmd == '':
             return self.default(line)
-        else:
-            try:
-                func = getattr(self, 'do_' + cmd)
-            except AttributeError:
-                return self.default(line)
-            return func(arg)
+        try:
+            func = getattr(self, f'do_{cmd}')
+        except AttributeError:
+            return self.default(line)
+        return func(arg)
 
     # ==================================================================================================================
     # COMPLETE METHODS
@@ -145,28 +144,28 @@ class Framework(cmd.Cmd):
         history_path = Constants.FILE_HISTORY
         try:
             if self._global_options['save_history']:
-                self.printer.debug("Saving command history to: {}".format(history_path))
+                self.printer.debug(f"Saving command history to: {history_path}")
                 readline.write_history_file(history_path)
         except Exception as e:
-            self.printer.warning("Error while saving command history: {}".format(e))
+            self.printer.warning(f"Error while saving command history: {e}")
             self.printer.warning("Continuing anyway...")
 
     def _history_load(self):
         history_path = Constants.FILE_HISTORY
         if os.path.exists(history_path):
-            self.printer.debug("Trying to load command history from: {}".format(history_path))
+            self.printer.debug(f"Trying to load command history from: {history_path}")
             readline.read_history_file(history_path)
         else:
-            self.printer.debug("Command history not found in: {}".format(history_path))
+            self.printer.debug(f"Command history not found in: {history_path}")
 
     # ==================================================================================================================
     # OUTPUT METHODS
     # ==================================================================================================================
     def print_exception(self, line=''):
         if self._global_options['debug']:
-            print('%s%s' % (Colors.R, '-'*60))
+            print(f"{Colors.R}{'-' * 60}")
             traceback.print_exc()
-            print('%s%s' % ('-'*60, Colors.N))
+            print(f"{'-' * 60}{Colors.N}")
         line = ' '.join([x for x in [traceback.format_exc().strip().splitlines()[-1], line] if x])
         self.printer.error(line)
 
@@ -179,21 +178,30 @@ class Framework(cmd.Cmd):
             print(line.upper())
             print(self.ruler*len(line))
         if level == 1:
-            print('%s%s' % (self.spacer, line.title()))
-            print('%s%s' % (self.spacer, self.ruler*len(line)))
+            print(f'{self.spacer}{line.title()}')
+            print(f'{self.spacer}{self.ruler * len(line)}')
 
     def print_table(self, data, header=[], title=''):
         """Accepts a list of rows and outputs a table."""
         tdata = list(data)
         if header:
             tdata.insert(0, header)
-        if len(set([len(x) for x in tdata])) > 1:
+        if len({len(x) for x in tdata}) > 1:
             raise FrameworkException('Row lengths not consistent.')
-        lens = []
         cols = len(tdata[0])
-        # create a list of max widths for each column
-        for i in range(0,cols):
-            lens.append(len(max([Utils.to_unicode_str(x[i]) if x[i] != None else '' for x in tdata], key=len)))
+        lens = [
+            len(
+                max(
+                    (
+                        Utils.to_unicode_str(x[i]) if x[i] != None else ''
+                        for x in tdata
+                    ),
+                    key=len,
+                )
+            )
+            for i in range(cols)
+        ]
+
         # calculate dynamic widths based on the title
         title_len = len(title)
         tdata_len = sum(lens) + (3*(cols-1))
@@ -202,12 +210,12 @@ class Framework(cmd.Cmd):
             diff_per = diff / cols
             lens = [x+diff_per for x in lens]
             diff_mod = diff % cols
-            for x in range(0, diff_mod):
+            for x in range(diff_mod):
                 lens[x] += 1
         # build ascii table
-        if len(tdata) > 0:
+        if tdata:
             separator_str = '%s+-%s%%s-+' % (self.spacer, '%s---'*(cols-1))
-            separator_sub = tuple(['-'*x for x in lens])
+            separator_sub = tuple('-'*x for x in lens)
             separator = separator_str % separator_sub
             data_str = '%s| %s%%s |' % (self.spacer, '%s | '*(cols-1))
             # top of ascii table
@@ -215,16 +223,21 @@ class Framework(cmd.Cmd):
             print(separator)
             # ascii table data
             if title:
-                print('%s| %s |' % (self.spacer, title.center(tdata_len)))
+                print(f'{self.spacer}| {title.center(tdata_len)} |')
                 print(separator)
             if header:
                 rdata = tdata.pop(0)
-                data_sub = tuple([rdata[i].center(lens[i]) for i in range(0,cols)])
+                data_sub = tuple(rdata[i].center(lens[i]) for i in range(cols))
                 print(data_str % data_sub)
                 print(separator)
             for rdata in tdata:
-                data_sub = tuple([Utils.to_unicode_str(rdata[i]).ljust(lens[i])
-                                  if rdata[i] is not None else ''.ljust(lens[i]) for i in range(0, cols)])
+                data_sub = tuple(
+                    Utils.to_unicode_str(rdata[i]).ljust(lens[i])
+                    if rdata[i] is not None
+                    else ''.ljust(lens[i])
+                    for i in range(cols)
+                )
+
                 print(data_str % data_sub)
             # bottom of ascii table
             print(separator)
@@ -254,7 +267,7 @@ class Framework(cmd.Cmd):
                 last_category = category
                 self.print_heading(last_category)
             # Print module
-            print('%s%s' % (self.spacer*2, module))
+            print(f'{self.spacer * 2}{module}')
         print('')
 
     def show_options(self, options=None):
@@ -264,26 +277,26 @@ class Framework(cmd.Cmd):
         if options:
             pattern = '%s%%s  %%s  %%s  %%s' % (self.spacer)
             key_len = len(max(options, key=len))
-            if key_len < 4:
-                key_len = 4
-            val_len = len(max([Utils.to_unicode_str(options[x]) for x in options], key=len))
-            if val_len < 13:
-                val_len = 13
+            key_len = max(key_len, 4)
+            val_len = len(
+                max((Utils.to_unicode_str(options[x]) for x in options), key=len)
+            )
+
+            val_len = max(val_len, 13)
             print('')
             print(pattern % ('Name'.ljust(key_len), 'Current Value'.ljust(val_len), 'Required', 'Description'))
             print(pattern % (self.ruler*key_len, (self.ruler*13).ljust(val_len), self.ruler*8, self.ruler*11))
             for key in sorted(options):
-                if not key == Constants.PASSWORD_CLEAR:
+                if key != Constants.PASSWORD_CLEAR:
                     value = options[key] if options[key] != None else ''
                     reqd = 'no' if options.required[key] is False else 'yes'
                     desc = options.description[key]
                     print(pattern % (key.upper().ljust(key_len), Utils.to_unicode_str(value).ljust(val_len),
                                      Utils.to_unicode_str(reqd).ljust(8), desc))
-            print('')
         else:
             print('')
-            print('%sNo options available for this module.' % self.spacer)
-            print('')
+            print(f'{self.spacer}No options available for this module.')
+        print('')
 
     def _get_show_names(self):
         """Any method beginning with "show_" will be parsed and added as a subcommand for the show command."""
@@ -342,7 +355,7 @@ class Framework(cmd.Cmd):
         options = sorted(self._get_show_names())
         print(getattr(self, 'do_show').__doc__)
         print('')
-        print('Usage: show [%s]' % ('|'.join(options)))
+        print(f"Usage: show [{'|'.join(options)}]")
         print('')
 
     def help_jobs(self):
@@ -379,11 +392,14 @@ class Framework(cmd.Cmd):
     def _validate_options(self):
         for option in self.options:
             # if value type is bool or int, then we know the options is set
-            if not type(self.options[option]) in [bool, int]:
-                if self.options.required[option] is True and not self.options[option]:
-                    if option == Constants.PASSWORD_CLEAR:
-                        option = 'password'.upper()
-                    raise FrameworkException('Value required for the \'%s\' option.' % (option.upper()))
+            if (
+                type(self.options[option]) not in [bool, int]
+                and self.options.required[option] is True
+                and not self.options[option]
+            ):
+                if option == Constants.PASSWORD_CLEAR:
+                    option = 'password'.upper()
+                raise FrameworkException('Value required for the \'%s\' option.' % (option.upper()))
         return
 
     def register_option(self, name, value, required, description):
@@ -406,7 +422,7 @@ class Framework(cmd.Cmd):
         # Cleanup temp folders
         try:
             # Cleanup local temp folder
-            self.printer.verbose("Cleaning local temp folder: %s" % self.path_home_temp)
+            self.printer.verbose(f"Cleaning local temp folder: {self.path_home_temp}")
             self.local_op.dir_delete(self.path_home_temp)
             # Cleanup remote temp folder
             if self.device:
@@ -414,7 +430,10 @@ class Framework(cmd.Cmd):
                 # Disconnect from device
                 self.device.disconnect()
         except Exception as e:
-            self.printer.warning("Problem while cleaning up temp folders, ignoring: %s - %s " % (type(e).__name__, e.message))
+            self.printer.warning(
+                f"Problem while cleaning up temp folders, ignoring: {type(e).__name__} - {e.message} "
+            )
+
         finally:
             # Exit
             self._exit = 1
@@ -445,7 +464,7 @@ class Framework(cmd.Cmd):
 
             # Actual set
             self.options[name] = value
-            print('%s => %s' % (name.upper(), value))
+            print(f'{name.upper()} => {value}')
 
             # Check verbosity level
             if name == 'debug':
@@ -465,7 +484,7 @@ class Framework(cmd.Cmd):
 
     def do_unset(self, params):
         """Unsets module options."""
-        self.do_set('%s %s' % (params, 'None'))
+        self.do_set(f'{params} None')
 
     def do_show(self, params):
         """Shows various framework items."""
@@ -476,7 +495,7 @@ class Framework(cmd.Cmd):
         arg = params[0]
         params = ' '.join(params[1:])
         if arg in self._get_show_names():
-            func = getattr(self, 'show_' + arg)
+            func = getattr(self, f'show_{arg}')
             if arg == 'modules':
                 func(params)
             else:
@@ -491,11 +510,10 @@ class Framework(cmd.Cmd):
             return
         text = params.split()[0]
         self.printer.info('Searching for "%s"...' % (text))
-        modules = [x for x in Framework._loaded_modules if text in x]
-        if not modules:
-            self.printer.error('No modules found containing \'%s\'.' % (text))
-        else:
+        if modules := [x for x in Framework._loaded_modules if text in x]:
             self.show_modules(modules)
+        else:
+            self.printer.error('No modules found containing \'%s\'.' % (text))
 
     def do_resource(self, params):
         """Executes commands from a resource file."""
@@ -537,10 +555,12 @@ class Framework(cmd.Cmd):
 
     def do_shell_local(self, params):
         """Executes local shell commands."""
-        self.printer.info('Executing Local Command: %s' % (params))
+        self.printer.info(f'Executing Local Command: {params}')
         out, err = self.local_op.command_blocking(params)
-        if out: print('%s%s%s' % (Colors.O, out, Colors.N), end='')
-        if err: print('%s%s%s' % (Colors.R, err, Colors.N), end='')
+        if out:
+            print(f'{Colors.O}{out}{Colors.N}', end='')
+        if err:
+            print(f'{Colors.R}{err}{Colors.N}', end='')
 
     def do_shell(self, params):
         """Drop a remote shell on the device."""
@@ -552,7 +572,7 @@ class Framework(cmd.Cmd):
         """Execute a single command on the remote device."""
         if not self.connection_check():
             return None
-        self.printer.info("Executing: %s" % params)
+        self.printer.info(f"Executing: {params}")
         self.device.remote_op.command_blocking(params, internal=False)
 
     def do_pull(self, params):
@@ -640,7 +660,10 @@ class Framework(cmd.Cmd):
             self._spawn_device()
             self.device.connect()
         except Exception as e:
-            self.printer.error("Problem establishing connection: %s - %s " % (type(e).__name__, e.message))
+            self.printer.error(
+                f"Problem establishing connection: {type(e).__name__} - {e.message} "
+            )
+
             self.print_exception()
             self.device.disconnect()
             self.device = Framework.device = None
@@ -656,16 +679,16 @@ class Framework(cmd.Cmd):
         else:
             # Check connection we have is with the current chosen IP, PORT, USERNAME, PASSWORD, PUB_KEY_AUTH
             if self._global_options['ip'] != self.device._ip or \
-               self._global_options['port'] != self.device._port or \
-               self._global_options['username'] != self.device._username or \
-               self._global_options[Constants.PASSWORD_CLEAR] != self.device._password or \
-               self._global_options['pub_key_auth'] != self.device._pub_key_auth:
+                   self._global_options['port'] != self.device._port or \
+                   self._global_options['username'] != self.device._username or \
+                   self._global_options[Constants.PASSWORD_CLEAR] != self.device._password or \
+                   self._global_options['pub_key_auth'] != self.device._pub_key_auth:
 
                 self.printer.verbose('Settings changed in global options. Establishing a new connection')
                 self.device = Framework.device = None
                 return self._connection_new()
             else:
-                self.printer.notify("Already connected to: %s" % self._global_options['ip'])
+                self.printer.notify(f"Already connected to: {self._global_options['ip']}")
                 return 1
 
     # ==================================================================================================================
@@ -684,7 +707,7 @@ class Framework(cmd.Cmd):
                 self.printer.error('Error selecting app. Please retry.')
                 return None
         # Metadata
-        self.printer.notify('Target app: %s' % app)
+        self.printer.notify(f'Target app: {app}')
         if not self.APP_METADATA or self.APP_METADATA['bundle_id'] != app:
             # Metadata not yet fetched, retrieve it
             self.printer.info("Retrieving app's metadata...")

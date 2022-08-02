@@ -22,8 +22,7 @@ class Module(BaseModule):
     def module_run(self):
         self.printer.info("Looking for installed Tweaks...")
         cmd = "{dpkg} -l | grep needle".format(dpkg=self.device.DEVICE_TOOLS['DPKG'])
-        out = self.device.remote_op.command_blocking(cmd)
-        if out:
+        if out := self.device.remote_op.command_blocking(cmd):
             self.printer.notify("The following Tweaks have been found: ")
             self.print_cmd_output(out)
         else:

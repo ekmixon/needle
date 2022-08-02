@@ -32,16 +32,24 @@ class Module(BaseModule):
 
     def _print_structure(self, directory):
         cmd = "{bin} {dir_str}".format(bin=self.device.DEVICE_TOOLS['FIND'], dir_str=directory['path'])
-        cmd = cmd + self.tree
+        cmd += self.tree
         out = self.device.remote_op.command_blocking(cmd)
-        self.device.printer.notify("Content of the {} folder:".format(directory['name']))
+        self.device.printer.notify(f"Content of the {directory['name']} folder:")
         self.print_cmd_output(out)
 
     def _download_folder(self, directory):
-        self.device.printer.info("Retrieving the content of the {} folder. This might take a while...".format(directory['name']))
-        outname = self.device.local_op.build_output_path_for_file('Containers_%s' % directory['name'], self)
+        self.device.printer.info(
+            f"Retrieving the content of the {directory['name']} folder. This might take a while..."
+        )
+
+        outname = self.device.local_op.build_output_path_for_file(
+            f"Containers_{directory['name']}", self
+        )
+
         self.device.remote_op.download(directory['path'], outname, recursive=True)
-        self.device.printer.notify("The content of the {} folder has been cloned locally: {}".format(directory['name'], outname))
+        self.device.printer.notify(
+            f"The content of the {directory['name']} folder has been cloned locally: {outname}"
+        )
 
     # ==================================================================================================================
     # RUN

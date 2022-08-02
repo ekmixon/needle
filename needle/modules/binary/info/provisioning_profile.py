@@ -31,13 +31,12 @@ class Module(BaseModule):
         cert_file = self.device.local_op.build_temp_path_for_file("cert", self)
         self.device.local_op.write_file(cert_file, cert)
         # Extract strings and look for the distribution profile
-        cmd = "cat {} | strings | grep iPhone".format(cert_file)
-        out = self.device.local_op.command_blocking(cmd)[0]
-        if out:
+        cmd = f"cat {cert_file} | strings | grep iPhone"
+        if out := self.device.local_op.command_blocking(cmd)[0]:
             msg = "Distribution Profile found"
             self.printer.notify(msg)
             self.print_cmd_output(out, None)
-            self.add_issue('Provisioning Profile', '{}: {}'.format(msg, out), 'INVESTIGATE', None)
+            self.add_issue('Provisioning Profile', f'{msg}: {out}', 'INVESTIGATE', None)
         else:
             msg = "No Distribution Profile found"
             self.printer.error(msg)
@@ -49,17 +48,23 @@ class Module(BaseModule):
     def module_run(self):
         # Preparing paths
         embedded = 'embedded.mobileprovision'
-        prov_remote = '{}/{}'.format(self.APP_METADATA['binary_directory'], embedded)
+        prov_remote = f"{self.APP_METADATA['binary_directory']}/{embedded}"
         prov_local = self.device.local_op.build_output_path_for_file(embedded, self)
 
         # Check if mobileprovision is available
         if not self.device.remote_op.file_exist(prov_remote):
-            self.printer.error("{} file not available!".format(embedded))
-            self.add_issue('Provisioning Profile', '{} file not available'.format(embedded), 'INVESTIGATE', None)
+            self.printer.error(f"{embedded} file not available!")
+            self.add_issue(
+                'Provisioning Profile',
+                f'{embedded} file not available',
+                'INVESTIGATE',
+                None,
+            )
+
             return
 
         # Retrieve the file
-        self.printer.debug("Retrieving the {} file...".format(embedded))
+        self.printer.debug(f"Retrieving the {embedded} file...")
         self.device.pull(prov_remote, prov_local)
 
         # Inspect file
@@ -68,7 +73,7 @@ class Module(BaseModule):
                                               prov=prov_local)
         out, err = self.device.local_op.command_blocking(cmd)
 
-        outfile = self.options['output'] if self.options['output'] else None
+        outfile = self.options['output'] or None
         self.print_cmd_output(out, outfile)
 
         # Parse the certificate

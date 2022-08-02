@@ -28,8 +28,10 @@ class Module(BaseModule):
             # Leftovers cleanup
             self.printer.debug("Leftovers cleanup...")
             folder_remote = self.device.remote_op.build_temp_path_for_file("interfaces")
-            folder_local = self.options['output'] if self.options['output'] \
-                                                  else self.local_op.build_output_path_for_file("interfaces", self)
+            folder_local = self.options[
+                'output'
+            ] or self.local_op.build_output_path_for_file("interfaces", self)
+
             self.device.remote_op.dir_reset(folder_remote)
             self.local_op.dir_reset(folder_local)
 
@@ -43,14 +45,14 @@ class Module(BaseModule):
             # Download interfaces
             self.printer.info("Retrieving interfaces...")
             self.device.remote_op.download(folder_remote, folder_local, recursive=True)
-            self.printer.notify("Interfaces saved in: %s" % folder_local)
+            self.printer.notify(f"Interfaces saved in: {folder_local}")
         else:
             # Dump classes
             self.printer.info("Dumping classes...")
             cmd = '{bin} "{appbin}" 2>/dev/null'.format(bin=self.device.DEVICE_TOOLS['CLASS-DUMP'], appbin=self.fname_binary)
             out = self.device.remote_op.command_blocking(cmd)
             # Save to file
-            outfile = self.options['output'] if self.options['output'] else None
+            outfile = self.options['output'] or None
             # Print to console
             if out:
                 self.printer.notify("The following content has been dumped: ")

@@ -30,12 +30,12 @@ class Module(BaseModule):
         # Build the cURL command
         cmd = '{curl} --insecure https://{url} '.format(curl=self.device.DEVICE_TOOLS['CURL'], url=self.options['url'])
         if self.options['proxy']:
-            cmd += ' -x {} '.format(self.options['proxy'])
+            cmd += f" -x {self.options['proxy']} "
 
         # Run the command for the first time to check for errors
         # This command will automatically report if the URL is incorrect or if there is an issue with the proxy
         self.printer.info('Checking for errors...')
-        self.device.remote_op.command_blocking('{} --fail --silent --show-error'.format(cmd))
+        self.device.remote_op.command_blocking(f'{cmd} --fail --silent --show-error')
 
         # Get the certificate
         self.printer.info('Getting the certificate...')
@@ -43,5 +43,5 @@ class Module(BaseModule):
         # Use awk to display only the relevant lines from the output
         cmd += "-v 2>&1 | awk 'BEGIN { cert=0 } /^\* Server certificate:/ { cert=1 } /^\*/ { if (cert) print }'"
         out = self.device.remote_op.command_blocking(cmd)
-        self.printer.notify('Certificate information for: {}'.format(self.options['url']))
+        self.printer.notify(f"Certificate information for: {self.options['url']}")
         self.print_cmd_output(out)

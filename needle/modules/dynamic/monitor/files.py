@@ -34,7 +34,7 @@ class Module(BackgroundModule):
         self.fname = self.device.remote_op.build_temp_path_for_file("fsmon")
 
         # Run command in a thread
-        self.printer.notify('Monitoring: %s' % self.options['folder'])
+        self.printer.notify(f"Monitoring: {self.options['folder']}")
         cmd = '{app} {flt} &> {fname}'.format(app=self.device.DEVICE_TOOLS['FSMON'],
                                               flt=self.options['folder'],
                                               fname=self.fname)
@@ -53,4 +53,6 @@ class Module(BackgroundModule):
 
         # Show output
         self.local_op.cat_file(outfile)
-        self.printer.info("A copy of the output has been saved at the following location: %s" % outfile)
+        self.printer.info(
+            f"A copy of the output has been saved at the following location: {outfile}"
+        )

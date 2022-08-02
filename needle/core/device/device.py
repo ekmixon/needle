@@ -64,7 +64,7 @@ class Device(object):
         if str(self._port) == '22':
             raise Exception('Chosen port must be different from 22 in order to use USB over SSH')
         # Setup the forwarding
-        self.printer.debug('Setting up USB port forwarding on port %s' % self._port)
+        self.printer.debug(f'Setting up USB port forwarding on port {self._port}')
         cmd = '{app} -t 22:{port}'.format(app=self._tools_local['TCPRELAY'], port=self._port)
         self._port_forward_ssh = self.local_op.command_subproc_start(cmd)
 
@@ -79,20 +79,25 @@ class Device(object):
     def _connect_ssh(self):
         """Open a new SSH connection using Paramiko."""
         try:
-            self.printer.verbose("[SSH] Connecting ({}:{})...".format(self._ip, self._port))
+            self.printer.verbose(f"[SSH] Connecting ({self._ip}:{self._port})...")
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(self._ip, port=self._port, username=self._username, password=self._password,
                         allow_agent=self._pub_key_auth, look_for_keys=self._pub_key_auth)
-            self.printer.notify("[SSH] Connected ({}:{})".format(self._ip, self._port))
+            self.printer.notify(f"[SSH] Connected ({self._ip}:{self._port})")
             return ssh
         except paramiko.AuthenticationException as e:
-            raise Exception('Authentication failed when connecting to %s. %s: %s' % (self._ip, type(e).__name__, e.message))
+            raise Exception(
+                f'Authentication failed when connecting to {self._ip}. {type(e).__name__}: {e.message}'
+            )
+
         except paramiko.SSHException as e:
             raise Exception('Connection dropped. Please check your connection with the device, '
                             'and reload the module. %s: %s' % (type(e).__name__, e.message))
         except Exception as e:
-            raise Exception('Could not open a connection to %s. %s - %s' % (self._ip, type(e).__name__, e.message))
+            raise Exception(
+                f'Could not open a connection to {self._ip}. {type(e).__name__} - {e.message}'
+            )
 
     def _disconnect_ssh(self):
         """Close the SSH connection, if available."""
@@ -137,7 +142,10 @@ class Device(object):
     # ==================================================================================================================
     def _portforward_agent_start(self):
         """Setup local port forward to enable communication with the Needle server running on the device."""
-        self.printer.debug('{} Setting up port forwarding on port {}'.format(Constants.AGENT_TAG, self._agent_port))
+        self.printer.debug(
+            f'{Constants.AGENT_TAG} Setting up port forwarding on port {self._agent_port}'
+        )
+
         localhost = '127.0.0.1'
         self._port_forward_agent = SSHTunnelForwarder(
             (self._ip, int(self._port)),
@@ -150,7 +158,7 @@ class Device(object):
 
     def _portforward_agent_stop(self):
         """Stop local port forwarding for Needle server."""
-        self.printer.debug('{} Stopping port forwarding'.format(Constants.AGENT_TAG))
+        self.printer.debug(f'{Constants.AGENT_TAG} Stopping port forwarding')
         if self._port_forward_agent:
             self._port_forward_agent.stop()
 
@@ -167,7 +175,10 @@ class Device(object):
     # ==================================================================================================================
     def _portforward_frida_start(self):
         """Setup local port forward to enable communication with the Frida server running on the device."""
-        self.printer.debug('{} Setting up port forwarding on port {}'.format("[FRIDA]", Constants.FRIDA_PORT))
+        self.printer.debug(
+            f'[FRIDA] Setting up port forwarding on port {Constants.FRIDA_PORT}'
+        )
+
         localhost = '127.0.0.1'
         self._frida_server = SSHTunnelForwarder(
             (self._ip, int(self._port)),
@@ -180,7 +191,7 @@ class Device(object):
 
     def _portforward_frida_stop(self):
         """Stop local port forwarding for Frida server."""
-        self.printer.debug('{} Stopping port forwarding'.format("FRIDA"))
+        self.printer.debug('FRIDA Stopping port forwarding')
         if self._frida_server:
             self._frida_server.stop()
 
@@ -198,15 +209,14 @@ class Device(object):
         """List all apps installed and let the user choose which one to target."""
         # Show menu to user
         self.printer.notify('Apps found:')
-        app_name = choose_from_list(self._applist.keys())
-        return app_name
+        return choose_from_list(self._applist.keys())
 
     # ==================================================================================================================
     # EXPOSED COMMANDS
     # ==================================================================================================================
     def is_usb(self):
         """Returns true if using SSH over USB."""
-        return self._ip == '127.0.0.1' or self._ip == 'localhost'
+        return self._ip in ['127.0.0.1', 'localhost']
 
     def connect(self):
         """Connect to the device (both SSH and AGENT)."""
@@ -231,7 +241,7 @@ class Device(object):
     def setup(self):
         """Create temp folder, and check if all tools are available"""
         # Setup temp folder
-        self.printer.debug("Creating temp folder: %s" % self.TEMP_FOLDER)
+        self.printer.debug(f"Creating temp folder: {self.TEMP_FOLDER}")
         self.remote_op.dir_create(self.TEMP_FOLDER)
         # Detect OS version
         if not self._ios_version:
@@ -239,7 +249,7 @@ class Device(object):
 
     def cleanup(self):
         """Remove temp folder from device."""
-        self.printer.debug("Cleaning up remote temp folder: %s" % self.TEMP_FOLDER)
+        self.printer.debug(f"Cleaning up remote temp folder: {self.TEMP_FOLDER}")
         self.remote_op.dir_delete(self.TEMP_FOLDER)
 
     def shell(self):
@@ -253,10 +263,10 @@ class Device(object):
 
     def pull(self, src, dst):
         """Pull a file from the device."""
-        self.printer.info("Pulling: %s -> %s" % (src, dst))
+        self.printer.info(f"Pulling: {src} -> {dst}")
         self.remote_op.download(src, dst)
 
     def push(self, src, dst):
         """Push a file on the device."""
-        self.printer.info("Pushing: %s -> %s" % (src, dst))
+        self.printer.info(f"Pushing: {src} -> {dst}")
         self.remote_op.upload(src, dst)

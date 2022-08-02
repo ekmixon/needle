@@ -53,5 +53,8 @@ class Module(BackgroundModule):
 
         # Show output
         self.local_op.cat_file(outfile)
-        self.printer.info("A copy of the output has been saved at the following location: %s" % outfile)
+        self.printer.info(
+            f"A copy of the output has been saved at the following location: {outfile}"
+        )
+
         self.add_issue('Content of OS Pasteboard', None, 'INVESTIGATE', outfile)

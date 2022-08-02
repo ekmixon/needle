@@ -56,15 +56,15 @@ class SocketRelay(object):
 				n = self.b.send(self.atob)
 				self.atob = self.atob[n:]
 			if self.a in rlo:
-				s = self.a.recv(self.maxbuf - len(self.atob))
-				if not s:
+				if s := self.a.recv(self.maxbuf - len(self.atob)):
+					self.atob += s
+				else:
 					return
-				self.atob += s
 			if self.b in rlo:
-				s = self.b.recv(self.maxbuf - len(self.btoa))
-				if not s:
+				if s := self.b.recv(self.maxbuf - len(self.btoa)):
+					self.btoa += s
+				else:
 					return
-				self.btoa += s
 			#print "Relay iter: %8d atob, %8d btoa, lists: %r %r %r"%(len(self.atob), len(self.btoa), rlo, wlo, xlo)
 
 class TCPRelay(SocketServer.BaseRequestHandler):
@@ -106,10 +106,7 @@ parser.add_option("-s", "--socket", dest='sockpath', action='store', metavar='PA
 
 options, args = parser.parse_args()
 
-serverclass = TCPServer
-if options.threaded:
-	serverclass = ThreadedTCPServer
-
+serverclass = ThreadedTCPServer if options.threaded else TCPServer
 if len(args) == 0:
 	parser.print_help()
 	sys.exit(1)

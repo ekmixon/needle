@@ -61,12 +61,13 @@ class Module(BaseModule):
                                             port=port)
         if verbose: cmd += ' -d'
         if anticache: cmd += ' --anticache'
-        if output: cmd += ' --wfile {}'.format(output)
+        if output:
+            cmd += f' --wfile {output}'
         if upstream: cmd += ' --upstream http://{ip}:{port}'.format(ip=upstream_ip, port=upstream_port)
         if target_domain:
             domain_list = map(Utils.regex_escape_str, target_domain.split(','))
-            domain_list_string = ''.join(['(?!{})'.format(el) for el in domain_list])
-            cmd += " --ignore '^{}'".format(domain_list_string)
+            domain_list_string = ''.join([f'(?!{el})' for el in domain_list])
+            cmd += f" --ignore '^{domain_list_string}'"
 
         # Intercept
         self.printer.notify('Configure the device to use this host as proxy: {ip}:{port}'.format(ip=self.local_op.get_ip(), port=port))

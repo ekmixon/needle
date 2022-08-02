@@ -30,38 +30,40 @@ class Module(BaseModule):
     def can_open_url(self, url):
         """Determine if it is possible to open the URL to the apple-app-site-association."""
         try:
-            response = urllib2.urlopen(url)
-            return response
+            return urllib2.urlopen(url)
         except:
             return None
 
     def _retrieve_apple_app_site_association(self, domain):
         # Construct the path to the apple-app-site-association file
-        url_https = urlparse.urljoin("https://{}".format(domain), self.APPLE_APP_SITE_ASSOCIATION)
+        url_https = urlparse.urljoin(
+            f"https://{domain}", self.APPLE_APP_SITE_ASSOCIATION
+        )
+
         url_https_known = urlparse.urljoin(url_https, ".well-known", self.APPLE_APP_SITE_ASSOCIATION)
-        url_http = urlparse.urljoin("http://{}".format(domain), self.APPLE_APP_SITE_ASSOCIATION)
+        url_http = urlparse.urljoin(
+            f"http://{domain}", self.APPLE_APP_SITE_ASSOCIATION
+        )
+
         url_http_known = urlparse.urljoin(url_http, ".well-known", self.APPLE_APP_SITE_ASSOCIATION)
         # First, try https in the root of the webserver
-        self.printer.debug("\t\tTrying URL: {}".format(url_https))
+        self.printer.debug(f"\t\tTrying URL: {url_https}")
         response = self.can_open_url(url_https_known)
         if not response:
-            self.printer.debug("\t\t...Failed. Trying URL: {}".format(url_https_known))
+            self.printer.debug(f"\t\t...Failed. Trying URL: {url_https_known}")
             response = self.can_open_url(url_https_known)
             # Fall back to HTTP
-            if not response:
-                self.printer.debug("\t\t... Failed. Trying URL: {}".format(url_http))
-                response = self.can_open_url(url_http)
-                if not response:
-                    self.printer.debug("\t\t... Failed. Trying URL: {}".format(url_http_known))
-                    response = self.can_open_url(url_http_known)
+        if not response:
+            self.printer.debug(f"\t\t... Failed. Trying URL: {url_http}")
+            response = self.can_open_url(url_http)
+        if not response:
+            self.printer.debug(f"\t\t... Failed. Trying URL: {url_http_known}")
+            response = self.can_open_url(url_http_known)
         return response
 
     def is_data_signed(self,data):
         """Determine if the file looks like its signed and should be verified."""
-        if data[0] == "\x30" and data[1] == "\x82":
-            return True
-        else:
-            return False
+        return data[0] == "\x30" and data[1] == "\x82"
 
     def verify_signature(self, data, verify=True):
         """Verify the SMIME signature of the file."""
@@ -80,11 +82,7 @@ class Module(BaseModule):
         return out, err
 
     def get_site_associations(self, domain):
-        # Retrieve apple-app-site-association
-        response = self._retrieve_apple_app_site_association(domain)
-
-        # We have a hit
-        if response:
+        if response := self._retrieve_apple_app_site_association(domain):
             data = response.read()
             self.printer.debug("\t\tGot apple-app-site-association data")
             # Check signature
@@ -106,7 +104,10 @@ class Module(BaseModule):
                 signed = False
                 signature = None
             # Print & Save to file
-            assoc_path = self.local_op.build_output_path_for_file('appsiteassoc_{}'.format(domain), self)
+            assoc_path = self.local_op.build_output_path_for_file(
+                f'appsiteassoc_{domain}', self
+            )
+
             outfile = str(assoc_path) if self.options['output'] else None
             self.print_cmd_output(data, outfile, silent=True)
         else:
@@ -136,8 +137,10 @@ class Module(BaseModule):
         associated_domains = []
         entitlements = self.APP_METADATA['entitlements']
         if entitlements and ('com.apple.developer.associated-domains' in entitlements):
-            for domain in entitlements['com.apple.developer.associated-domains']:
-                associated_domains.append(domain)
+            associated_domains.extend(
+                iter(entitlements['com.apple.developer.associated-domains'])
+            )
+
         else:
             self.printer.error('"com.apple.developer.associated-domains" entitlement not found')
             return

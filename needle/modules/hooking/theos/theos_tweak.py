@@ -36,12 +36,12 @@ class Module(BaseModule):
     def __init_const(self):
         # Parse options
         project_name = self.options['project_name'].lower()
-        package_name = 'needle.{}'.format(self.options['package_name'])
-        substrate_filter = self.options['substrate_filter'] if self.options['substrate_filter'] else ''
-        terminate_app = self.options['terminate_app'] if self.options['terminate_app'] else '-'
+        package_name = f"needle.{self.options['package_name']}"
+        substrate_filter = self.options['substrate_filter'] or ''
+        terminate_app = self.options['terminate_app'] or '-'
         # Build paths
-        self.project_folder = '{}{}'.format(self.device.TEMP_FOLDER, project_name)
-        self.tweak = "{}/Tweak.xm".format(self.project_folder)
+        self.project_folder = f'{self.device.TEMP_FOLDER}{project_name}'
+        self.tweak = f"{self.project_folder}/Tweak.xm"
         # Build config list
         cfg = [
             '11',
@@ -56,9 +56,9 @@ class Module(BaseModule):
     def __bypass_wizard(self):
         bypass = False
         if self.device.remote_op.dir_exist(self.project_folder):
-            msg = "A Tweak with the same PROJECT_NAME ({}) already exists. Do you want to delete it and start from scratch?".format(self.options['project_name'])
-            clean = choose_boolean(msg)
-            if clean:
+            msg = f"A Tweak with the same PROJECT_NAME ({self.options['project_name']}) already exists. Do you want to delete it and start from scratch?"
+
+            if clean := choose_boolean(msg):
                 self.device.remote_op.dir_delete(self.project_folder)
             else:
                 bypass = True

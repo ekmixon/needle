@@ -49,31 +49,31 @@ class Printer(object):
     def debug(self, msg):
         """Formats and presents output if in debug mode (very verbose)."""
         if self.is_debug:
-            msg = '%s[D]%s %s' % (Colors.O, Colors.N, Utils.to_unicode(msg))
+            msg = f'{Colors.O}[D]{Colors.N} {Utils.to_unicode(msg)}'
             print(msg)
 
     def verbose(self, msg):
         """Formats and presents output if in verbose mode."""
         if self.is_verbose:
-            msg = '%s[V]%s %s' % (Colors.C, Colors.N, Utils.to_unicode(msg))
+            msg = f'{Colors.C}[V]{Colors.N} {Utils.to_unicode(msg)}'
             print(msg)
 
     def info(self, msg):
         """Formats and presents normal output."""
-        msg = '%s[*]%s %s' % (Colors.B, Colors.N, Utils.to_unicode(msg))
+        msg = f'{Colors.B}[*]{Colors.N} {Utils.to_unicode(msg)}'
         print(msg)
 
     def notify(self, msg):
         """Formats and presents important output."""
-        msg = '%s[+]%s %s' % (Colors.G, Colors.N, Utils.to_unicode(msg))
+        msg = f'{Colors.G}[+]{Colors.N} {Utils.to_unicode(msg)}'
         print(msg)
 
     def warning(self, msg):
         """Formats and presents warnings."""
-        msg = '%s[?] %s%s' % (Colors.O, Utils.to_unicode(msg), Colors.N,)
+        msg = f'{Colors.O}[?] {Utils.to_unicode(msg)}{Colors.N}'
         print(msg)
 
     def error(self, msg):
         """Formats and presents errors."""
-        msg = '%s[!] %s%s' % (Colors.R, Utils.to_unicode(msg), Colors.N)
+        msg = f'{Colors.R}[!] {Utils.to_unicode(msg)}{Colors.N}'
         print(msg)

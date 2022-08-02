@@ -55,33 +55,30 @@ class IssueManager(object):
         """Calculate the DB full pathname and create all the tables needed."""
         self._db = Utils.path_join(folder, Constants.FILE_DB)
         self.printer.debug("Setting up issues database...")
-        self._db_query('CREATE TABLE IF NOT EXISTS {} ({} TEXT)'.format(self.DB_TABLE_ISSUES, ' TEXT, '.join(Issue.FIELD_LIST)))
+        self._db_query(
+            f"CREATE TABLE IF NOT EXISTS {self.DB_TABLE_ISSUES} ({' TEXT, '.join(Issue.FIELD_LIST)} TEXT)"
+        )
 
     def _db_get_tables(self):
         return [x[0] for x in self._db_query('SELECT name FROM sqlite_master WHERE type=\'table\'')]
 
     def _db_query(self, query, values=()):
         """Queries the database and returns the results as a list."""
-        self.printer.debug('[DB] QUERY: {}'.format(query))
+        self.printer.debug(f'[DB] QUERY: {query}')
         if not self._db:
             self.db_setup(self.framework._global_options['output_folder'])
 
         with sqlite3.connect(self._db) as conn:
             with closing(conn.cursor()) as cur:
                 if values:
-                    self.printer.debug('[DB] VALUES: {}'.format(values))
+                    self.printer.debug(f'[DB] VALUES: {values}')
                     cur.execute(query, values)
                 else:
                     cur.execute(query)
-                # a rowcount of -1 typically refers to a select statement
                 if cur.rowcount == -1:
-                    rows = cur.fetchall()
-                    results = rows
-                # a rowcount of 1 == success and 0 == failure
-                else:
-                    conn.commit()
-                    results = cur.rowcount
-                return results
+                    return cur.fetchall()
+                conn.commit()
+                return cur.rowcount
 
     def _db_insert(self, table, data, unique_columns=[]):
         """Inserts items into database and returns the affected row count.
@@ -99,20 +96,20 @@ class IssueManager(object):
         # Exit if there is nothing left to insert
         if not columns:
             return 0
-        if not unique_columns:
-            query = u'INSERT INTO "%s" ("%s") VALUES (%s)' % (
-                table,
-                '", "'.join(columns),
-                ', '.join('?' * len(columns))
-            )
-        else:
-            query = u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)' % (
+        query = (
+            u'INSERT INTO "%s" ("%s") SELECT %s WHERE NOT EXISTS(SELECT * FROM "%s" WHERE %s)'
+            % (
                 table,
                 '", "'.join(columns),
                 ', '.join('?' * len(columns)),
                 table,
-                ' and '.join(['"%s"=?' % (column) for column in unique_columns])
+                ' and '.join(['"%s"=?' % (column) for column in unique_columns]),
             )
+            if unique_columns
+            else u'INSERT INTO "%s" ("%s") VALUES (%s)'
+            % (table, '", "'.join(columns), ', '.join('?' * len(columns)))
+        )
+
         values = tuple([data[column] for column in columns] + [data[column] for column in unique_columns])
         self._db_query(query, values)
 
@@ -128,11 +125,11 @@ class IssueManager(object):
             self._issue_list.append(new_issue)
             # Add to db
             self._db_insert(self.DB_TABLE_ISSUES, new_issue, new_issue.keys())
-            self.printer.debug('New issue added: {}'.format(new_issue['name']))
+            self.printer.debug(f"New issue added: {new_issue['name']}")
 
     def issue_add_manual(self):
         """Prompt the user to insert all the info needed to add an issue."""
-        args = [print_question('Please insert {}: '.format(el)) for el in Issue.FIELD_LIST]
+        args = [print_question(f'Please insert {el}: ') for el in Issue.FIELD_LIST]
         self.issue_add(*args)
 
     def issue_load(self):

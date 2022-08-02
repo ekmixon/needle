@@ -34,15 +34,15 @@ class Module(FridaModule):
 
         if functions:
             fun_list = functions.split(',')
-            fun_list_string = ''.join([' -i "{}"'.format(el) for el in fun_list])
+            fun_list_string = ''.join([f' -i "{el}"' for el in fun_list])
             cmd += fun_list_string
         if methods:
             method_list = methods.split(',')
-            method_list_string = ''.join([' -m "{}"'.format(el) for el in method_list])
+            method_list_string = ''.join([f' -m "{el}"' for el in method_list])
             cmd += method_list_string
         if modules:
             modules_list = modules.split(',')
-            modules_list_string = ''.join([' -I "{}"'.format(el) for el in modules_list])
+            modules_list_string = ''.join([f' -I "{el}"' for el in modules_list])
             cmd += modules_list_string
 
         # Launch frida-trace

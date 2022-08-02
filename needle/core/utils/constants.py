@@ -4,6 +4,8 @@ import sys
 from ..utils.printer import Colors
 
 
+
+
 class Constants(object):
     # ==================================================================================================================
     # METADATA
@@ -19,7 +21,7 @@ class Constants(object):
     NAME = 'Needle'
     DESCRIPTION = 'The iOS Security Testing Framework'
     NAME_FOLDER = '.needle'
-    NAME_CLI = '%s[needle]%s > ' % (Colors.C, Colors.N)
+    NAME_CLI = f'{Colors.C}[needle]{Colors.N} > '
 
     # PATHS
     FOLDER_HOME = os.path.join(os.path.expanduser('~'), NAME_FOLDER)
@@ -118,59 +120,240 @@ class Constants(object):
     DEVICE_SETUP = {
         'PREREQUISITES': ['apt-get', 'dpkg'],
         'TOOLS': {
-            # Installation modes supported:
-            #   - PACKAGES  = None && LOCAL  = None --> don't install the tools (prerequisite, etc.)
-            #   - PACKAGES != None && LOCAL  = None --> add repo if not None, then use apt-get to install the tool
-            #   - PACKAGES  = None && LOCAL != None --> use local installation
-
-            # UNIX UTILITIES
-            'APT-GET': {'COMMAND': 'apt-get', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'DPKG': {'COMMAND': 'dpkg', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'FIND': {'COMMAND': 'find', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'GAWK': {'COMMAND': 'awk', 'PACKAGES': ['gawk'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'WHICH': {'COMMAND': 'which', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'LIPO': {'COMMAND': 'lipo', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'PLUTIL': {'COMMAND': 'plutil', 'PACKAGES': ['com.ericasadun.utilities'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'UNZIP':  {'COMMAND': 'unzip', 'PACKAGES': ['unzip'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'STRINGS': {'COMMAND': 'strings', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-
-            # TOOLKITS
-            'COREUTILS': {'COMMAND': None, 'PACKAGES': ['coreutils', 'coreutils-bin'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'DARWINTOOLS': {'COMMAND': None, 'PACKAGES': ['org.coolstar.cctools'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-
-            # TOOLS
-            'CYCRIPT': {'COMMAND': 'cycript', 'PACKAGES': ['cycript'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'FRIDA': {'COMMAND': 'frida', 'PACKAGES': ['re.frida.server'], 'REPO': 'https://build.frida.re/', 'LOCAL': None, 'SETUP': None},
-            'FRIDA32BIT': {'COMMAND': 'frida', 'PACKAGES': ['re.frida.server32'], 'REPO': 'https://build.frida.re/', 'LOCAL': None, 'SETUP': None},
-            'GDB': {'COMMAND': 'gdb', 'PACKAGES': ['gdb'], 'REPO': 'http://cydia.radare.org/', 'LOCAL': None, 'SETUP': None},
-            'THEOS': {'COMMAND': 'theos', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': [
-                "ln -s /usr/local/bin/perl /usr/bin/perl",
-                "GIT_SSL_NO_VERIFY=true git clone --recursive https://github.com/theos/theos.git %s" % THEOS_FOLDER,
-                "mkdir -p %ssdks" % THEOS_FOLDER,
-                "curl -ksL \"https://sdks.website/dl/iPhoneOS8.1.sdk.tbz2\" | tar -xj -C %ssdks" % THEOS_FOLDER,
-                "curl -ksL \"https://sdks.website/dl/iPhoneOS9.3.sdk.tbz2\" | tar -xj -C %ssdks" % THEOS_FOLDER,
-            ]},
-            'THEOS_NIC': {'COMMAND': '%sbin/nic.pl' % THEOS_FOLDER, 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-
-            # TO REPLACE
-            'CLASS-DUMP': {'COMMAND': 'class-dump', 'PACKAGES': ['pcre', 'net.limneos.classdump-dyld', 'class-dump'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'CLUTCH': {'COMMAND': 'Clutch2', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': [
-                "curl -ksL \"http://cydia.iphonecake.com/Clutch2.0.4.deb\" -o /var/root/clutch.deb",
-                "dpkg -i /var/root/clutch.deb && rm -f /var/root/clutch.deb",
-                "killall -HUP SpringBoard"
-            ]},
-            'CURL': {'COMMAND': 'curl', 'PACKAGES': ['curl'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'FILEDP': {'COMMAND': 'FileDP', 'PACKAGES': None, 'REPO': None, 'LOCAL': os.path.join(PATH_DEVICETOOLS, 'FileDP'), 'SETUP': None},
-            'FSMON': {'COMMAND': 'fsmon', 'PACKAGES': None, 'REPO': None, 'LOCAL': os.path.join(PATH_DEVICETOOLS, 'fsmon'), 'SETUP': None},
-            'IPAINSTALLER': {'COMMAND': 'ipainstaller', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'KEYCHAIN_DUMP': {'COMMAND': 'keychain_dump', 'PACKAGES': None, 'REPO': None, 'LOCAL': os.path.join(PATH_DEVICETOOLS, 'keychain_dump'), 'SETUP': None},
-            'ONDEVICECONSOLE': {'COMMAND': 'ondeviceconsole', 'PACKAGES': ['com.eswick.ondeviceconsole'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'OPEN': {'COMMAND': 'open', 'PACKAGES': ['com.conradkramer.open'], 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'OTOOL': {'COMMAND': 'otool', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-            'PBWATCHER': {'COMMAND': 'pbwatcher', 'PACKAGES': None, 'REPO': None, 'LOCAL': os.path.join(PATH_DEVICETOOLS, 'pbwatcher'), 'SETUP': None},
-            'PERL': {'COMMAND': 'perl', 'PACKAGES': ['org.coolstar.perl', 'org.coolstar.iostoolchain'], 'REPO': 'http://coolstar.org/publicrepo/', 'LOCAL': None, 'SETUP': None},
-            'SCP': {'COMMAND': 'scp', 'PACKAGES': ['org.coolstar.scp-sftp-dropbear'], 'REPO': 'https://coolstar.org/publicrepo/', 'LOCAL': None, 'SETUP': None},
-            'UIOPEN': {'COMMAND': 'uiopen', 'PACKAGES': None, 'REPO': None, 'LOCAL': None, 'SETUP': None},
-        }
+            'APT-GET': {
+                'COMMAND': 'apt-get',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'DPKG': {
+                'COMMAND': 'dpkg',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'FIND': {
+                'COMMAND': 'find',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'GAWK': {
+                'COMMAND': 'awk',
+                'PACKAGES': ['gawk'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'WHICH': {
+                'COMMAND': 'which',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'LIPO': {
+                'COMMAND': 'lipo',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'PLUTIL': {
+                'COMMAND': 'plutil',
+                'PACKAGES': ['com.ericasadun.utilities'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'UNZIP': {
+                'COMMAND': 'unzip',
+                'PACKAGES': ['unzip'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'STRINGS': {
+                'COMMAND': 'strings',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'COREUTILS': {
+                'COMMAND': None,
+                'PACKAGES': ['coreutils', 'coreutils-bin'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'DARWINTOOLS': {
+                'COMMAND': None,
+                'PACKAGES': ['org.coolstar.cctools'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'CYCRIPT': {
+                'COMMAND': 'cycript',
+                'PACKAGES': ['cycript'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'FRIDA': {
+                'COMMAND': 'frida',
+                'PACKAGES': ['re.frida.server'],
+                'REPO': 'https://build.frida.re/',
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'FRIDA32BIT': {
+                'COMMAND': 'frida',
+                'PACKAGES': ['re.frida.server32'],
+                'REPO': 'https://build.frida.re/',
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'GDB': {
+                'COMMAND': 'gdb',
+                'PACKAGES': ['gdb'],
+                'REPO': 'http://cydia.radare.org/',
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'THEOS': {
+                'COMMAND': 'theos',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': [
+                    "ln -s /usr/local/bin/perl /usr/bin/perl",
+                    f"GIT_SSL_NO_VERIFY=true git clone --recursive https://github.com/theos/theos.git {THEOS_FOLDER}",
+                    f"mkdir -p {THEOS_FOLDER}sdks",
+                    "curl -ksL \"https://sdks.website/dl/iPhoneOS8.1.sdk.tbz2\" | tar -xj -C %ssdks"
+                    % THEOS_FOLDER,
+                    "curl -ksL \"https://sdks.website/dl/iPhoneOS9.3.sdk.tbz2\" | tar -xj -C %ssdks"
+                    % THEOS_FOLDER,
+                ],
+            },
+            'THEOS_NIC': {
+                'COMMAND': f'{THEOS_FOLDER}bin/nic.pl',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'CLASS-DUMP': {
+                'COMMAND': 'class-dump',
+                'PACKAGES': [
+                    'pcre',
+                    'net.limneos.classdump-dyld',
+                    'class-dump',
+                ],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'CLUTCH': {
+                'COMMAND': 'Clutch2',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': [
+                    "curl -ksL \"http://cydia.iphonecake.com/Clutch2.0.4.deb\" -o /var/root/clutch.deb",
+                    "dpkg -i /var/root/clutch.deb && rm -f /var/root/clutch.deb",
+                    "killall -HUP SpringBoard",
+                ],
+            },
+            'CURL': {
+                'COMMAND': 'curl',
+                'PACKAGES': ['curl'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'FILEDP': {
+                'COMMAND': 'FileDP',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': os.path.join(PATH_DEVICETOOLS, 'FileDP'),
+                'SETUP': None,
+            },
+            'FSMON': {
+                'COMMAND': 'fsmon',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': os.path.join(PATH_DEVICETOOLS, 'fsmon'),
+                'SETUP': None,
+            },
+            'IPAINSTALLER': {
+                'COMMAND': 'ipainstaller',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'KEYCHAIN_DUMP': {
+                'COMMAND': 'keychain_dump',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': os.path.join(PATH_DEVICETOOLS, 'keychain_dump'),
+                'SETUP': None,
+            },
+            'ONDEVICECONSOLE': {
+                'COMMAND': 'ondeviceconsole',
+                'PACKAGES': ['com.eswick.ondeviceconsole'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'OPEN': {
+                'COMMAND': 'open',
+                'PACKAGES': ['com.conradkramer.open'],
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'OTOOL': {
+                'COMMAND': 'otool',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'PBWATCHER': {
+                'COMMAND': 'pbwatcher',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': os.path.join(PATH_DEVICETOOLS, 'pbwatcher'),
+                'SETUP': None,
+            },
+            'PERL': {
+                'COMMAND': 'perl',
+                'PACKAGES': ['org.coolstar.perl', 'org.coolstar.iostoolchain'],
+                'REPO': 'http://coolstar.org/publicrepo/',
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'SCP': {
+                'COMMAND': 'scp',
+                'PACKAGES': ['org.coolstar.scp-sftp-dropbear'],
+                'REPO': 'https://coolstar.org/publicrepo/',
+                'LOCAL': None,
+                'SETUP': None,
+            },
+            'UIOPEN': {
+                'COMMAND': 'uiopen',
+                'PACKAGES': None,
+                'REPO': None,
+                'LOCAL': None,
+                'SETUP': None,
+            },
+        },
     }
+
     DEVICE_TOOLS = dict([(k, v['COMMAND']) for k, v in DEVICE_SETUP['TOOLS'].iteritems() if v['COMMAND'] is not None])

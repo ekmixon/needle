@@ -35,7 +35,7 @@ class Module(BaseModule):
         if not self.options['output']:
             return
         # Prepare path
-        temp_name = 'BinaryCookies_{}'.format(local_name)
+        temp_name = f'BinaryCookies_{local_name}'
         local_name = self.local_op.build_output_path_for_file(temp_name, self)
         # Save to file
         self.device.pull(remote_name, local_name)

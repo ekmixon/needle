@@ -41,7 +41,7 @@ class Module(BaseModule):
 
         # Backup
         self.printer.debug("Backing up the original TrustStore...")
-        bkp = "%s.bkp" % Constants.DEVICE_PATH_TRUST_STORE
+        bkp = f"{Constants.DEVICE_PATH_TRUST_STORE}.bkp"
         self.device.remote_op.file_copy(self.truststore_path, bkp)
 
         # Updating device

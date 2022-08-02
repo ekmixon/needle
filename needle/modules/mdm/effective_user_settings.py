@@ -38,7 +38,7 @@ class Module(BaseModule):
         """Pulls a file from the device and returns the local file name."""
         if not self.options['output']:
             return
-        temp_name = 'MDM_{}'.format(local_name)
+        temp_name = f'MDM_{local_name}'
         local_name = self.local_op.build_output_path_for_file(temp_name, self)
         self.device.pull(remote_name, local_name)
         return local_name
@@ -48,10 +48,10 @@ class Module(BaseModule):
         try:
             config, merged = Utils.plist_read_from_file(config_file), {}
             for k in config.keys(): 
-                merged.update(config[k])
+                merged |= config[k]
             return merged
         except:
-            self.printer.error('Invalid file: %s' % config_file)
+            self.printer.error(f'Invalid file: {config_file}')
             raise FrameworkException('Invalid configuration file!')
 
     def compare(self, f_current, f_desired):
@@ -126,7 +126,7 @@ class Module(BaseModule):
         # Check if the EffectiveUserSettings.plist file is present
         config_file = Constants.DEVICE_PATH_EFFECTIVE_USER_SETTINGS_IOS10 if "10" in self.device._ios_version else Constants.DEVICE_PATH_EFFECTIVE_USER_SETTINGS_IOS9_AND_BELOW
         if not self.device.remote_op.file_exist(config_file):
-            raise FrameworkException('Could not find: %s' % config_file)
+            raise FrameworkException(f'Could not find: {config_file}')
 
         # Pull Effective User Settings plist
         local_name = Utils.extract_filename_from_path(config_file)
@@ -139,4 +139,4 @@ class Module(BaseModule):
                 raise FrameworkException('Template not provided')
             self.compare(local_file, self.options['template'])
 
-        self.printer.notify('Configuration Saved to: %s' % local_file)
+        self.printer.notify(f'Configuration Saved to: {local_file}')

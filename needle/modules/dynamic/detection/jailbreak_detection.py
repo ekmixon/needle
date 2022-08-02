@@ -42,7 +42,7 @@ class Module(BaseModule):
         # Intepret string to list
         file_list = ast.literal_eval(file_list_str[0])
         # Eliminate duplicates and filter log files
-        fnames = list(set([el['filename'] for el in file_list]))
+        fnames = list({el['filename'] for el in file_list})
         self.crashes = filter(lambda x: x.endswith('.log'), fnames)
         # Print identified files
         if self.crashes:
@@ -82,7 +82,7 @@ class Module(BaseModule):
         for el in self.crash_details:
             # Prepare orig and new
             fname, content_orig = el['file'], el['content']
-            self.printer.info('Analyzing: %s' % fname)
+            self.printer.info(f'Analyzing: {fname}')
             content_new = self.device.remote_op.read_file(fname)
             # Diff
             diff = difflib.unified_diff(content_orig, content_new)

@@ -52,7 +52,7 @@ class Module(BaseModule):
 
             # Backup
             self.printer.debug("Backing up the original hosts file...")
-            bkp = "{}.bkp".format(self.path_remote)
+            bkp = f"{self.path_remote}.bkp"
             self.device.remote_op.file_copy(self.path_remote, bkp)
 
             # Updating device

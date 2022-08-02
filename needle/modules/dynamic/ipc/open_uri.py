@@ -20,6 +20,6 @@ class Module(BaseModule):
     # ==================================================================================================================
     def module_run(self):
         # Open the URI
-        self.printer.notify('Opening URI: %s' % self.options['uri'])
+        self.printer.notify(f"Opening URI: {self.options['uri']}")
         cmd = '{bin} {uri}'.format(bin=self.device.DEVICE_TOOLS['UIOPEN'], uri=self.options['uri'])
         self.device.remote_op.command_blocking(cmd)

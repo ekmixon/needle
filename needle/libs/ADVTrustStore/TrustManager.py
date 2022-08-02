@@ -114,8 +114,7 @@ class Encoder(object):
         """Emit a long (>= 31 bytes) tag."""
         head = chr(typ | cls | 0x1f)
         self._emit(head)
-        values = []
-        values.append((nr & 0x7f))
+        values = [nr & 0x7f]
         nr >>= 7
         while nr:
             values.append((nr & 0x7f) | 0x80)
@@ -258,9 +257,7 @@ class Decoder(object):
 
     def _read_value(self, nr, length):
         """Read a value from the input."""
-        bytes = self._read_bytes(length)
-        value = bytes
-        return value
+        return self._read_bytes(length)
 
     def _read_byte(self):
         """Return the next input byte, or raise an error on end-of-input."""
@@ -285,7 +282,7 @@ class Decoder(object):
     def _end_of_input(self):
         """Return True if we are at the end of input."""
         index, input = self.m_stack[-1]
-        assert not index > len(input)
+        assert index <= len(input)
         return index == len(input)
 
 
@@ -301,7 +298,7 @@ def query_yes_no(question, default="yes"):
     """
     valid = {"yes":"yes",   "y":"yes",  "ye":"yes",
              "no":"no",     "n":"no"}
-    if default == None:
+    if default is None:
         prompt = " [y/n] "
     elif default == "yes":
         prompt = " [Y/n] "
@@ -315,7 +312,7 @@ def query_yes_no(question, default="yes"):
         choice = raw_input().lower()
         if default is not None and choice == '':
             return default
-        elif choice in valid.keys():
+        elif choice in valid:
             return valid[choice]
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "\
@@ -363,7 +360,7 @@ class Certificate:
         return self._data
 
     def get_fingerprint(self):
-        if self._fingerprint == None and self._data != None:
+        if self._fingerprint is None and self._data != None:
             sha1 = hashlib.sha1()
             sha1.update(self._data)
             self._fingerprint = sha1.digest()
@@ -383,7 +380,7 @@ class Certificate:
     def get_subject_ASN1(self):
         """Get the certificate subject in ASN1 encoded format as expected for the IOS trusted certificate keychain store
         """
-        if self._subject == None and self._data != None:
+        if self._subject is None and self._data != None:
             self._subject = bytearray()
             decoder = Decoder()
             decoder.start(self._data)
@@ -425,15 +422,12 @@ class TrustStore:
     """Represents the IOS trusted certificate store"""
     def __init__(self, path, title=None):
         self._path = path
-        if title:
-            self._title = title
-        else:
-            self._title = path
+        self._title = title or path
         self._tset = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"\
-            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"\
-            "<plist version=\"1.0\">\n"\
-            "<array/>\n"\
-            "</plist>\n"
+                "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"\
+                "<plist version=\"1.0\">\n"\
+                "<array/>\n"\
+                "</plist>\n"
 
     def is_valid(self):
         conn = sqlite3.connect(self._path)
@@ -460,11 +454,11 @@ class TrustStore:
         conn.close()
 
     def _loadBlob(self, baseName, name):
-        with open(baseName + '_' + name + '.bin', 'rb') as inputFile:
+        with open(f'{baseName}_{name}.bin', 'rb') as inputFile:
             return inputFile.read()
 
     def _saveBlob(self, baseName, name, data):
-        with open(baseName + '_' + name + '.bin', 'wb') as outputFile:
+        with open(f'{baseName}_{name}.bin', 'wb') as outputFile:
             outputFile.write (data)
 
     def add_certificate(self, certificate):

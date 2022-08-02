@@ -52,7 +52,13 @@ if(ObjC.available) {
     def module_run(self):
         # If error has been detected, log issue and exit
         if self.msg:
-            self.add_issue('Anti-Hooking Check', 'It was not possible to attach frida: {}'.format(self.msg), 'INVESTIGATE', None)
+            self.add_issue(
+                'Anti-Hooking Check',
+                f'It was not possible to attach frida: {self.msg}',
+                'INVESTIGATE',
+                None,
+            )
+
             return
         # Run the payload
         try:

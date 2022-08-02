@@ -27,7 +27,7 @@ class Module(FridaScript):
     def module_run(self):
         # Parse the payload
         payload = self.options['payload']
-        self.printer.info("Parsing payload: %s" % payload)
+        self.printer.info(f"Parsing payload: {payload}")
         hook = open(payload, "r")
         script = self.session.create_script(hook.read())
 

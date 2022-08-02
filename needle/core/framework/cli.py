@@ -94,22 +94,34 @@ class CLI(Framework):
         '''
         banner_len = len(max(banner.split('\n'), key=len))
         print(banner)
-        print('{msg:^{lgh}}'.format(msg='%s %s v%s [%s]%s' % (Colors.G, self._name, Constants.VERSION, __website__, Colors.N),
-                                    lgh=banner_len+8+8))
-        print('{msg:^{lgh}}'.format(msg='%s[%s]%s' % (Colors.B, __author__, Colors.N),
-                                    lgh=banner_len+8+8))
+        print(
+            '{msg:^{lgh}}'.format(
+                msg=f'{Colors.G} {self._name} v{Constants.VERSION} [{__website__}]{Colors.N}',
+                lgh=banner_len + 8 + 8,
+            )
+        )
+
+        print(
+            '{msg:^{lgh}}'.format(
+                msg=f'{Colors.B}[{__author__}]{Colors.N}', lgh=banner_len + 8 + 8
+            )
+        )
+
         print('')
 
     def version_check(self):
         try:
             pattern = "'(\d+\.\d+\.\d+[^']*)'"
-            remote = re.search(pattern, urllib2.urlopen(Constants.VERSION_CHECK).read()).group(1)
+            remote = re.search(pattern, urllib2.urlopen(Constants.VERSION_CHECK).read())[1]
             local = Constants.VERSION
             if local != remote:
-                self.printer.error('Your version of {} does not match the latest release.'.format(Constants.NAME))
+                self.printer.error(
+                    f'Your version of {Constants.NAME} does not match the latest release.'
+                )
+
                 self.printer.error('Please update or use the \'--no-check\' switch to continue using the old version.')
-                self.printer.error('Local version: {}'.format(local))
-                self.printer.error('Remote version: {}'.format(remote))
+                self.printer.error(f'Local version: {local}')
+                self.printer.error(f'Remote version: {remote}')
                 return False
             else:
                 return True
@@ -127,18 +139,18 @@ class CLI(Framework):
         for path in [os.path.join(x, 'modules') for x in (self.path_app, self.path_home)]:
             for dirpath, dirnames, filenames in os.walk(path):
                 # Exclude hidden files and directories
-                filenames = [f for f in filenames if not f[0] == '.']
-                dirnames[:] = [d for d in dirnames if not d[0] == '.']
-                if len(filenames) > 0:
+                filenames = [f for f in filenames if f[0] != '.']
+                dirnames[:] = [d for d in dirnames if d[0] != '.']
+                if filenames:
                     for filename in [f for f in filenames if f.endswith('.py')]:
                         if 'unstable' in dirpath:
                             continue
                         is_loaded = self._load_module(dirpath, filename)
                         mod_category = 'disabled'
                         if is_loaded:
-                            mod_category = re.search('/modules/([^/]*)', dirpath).group(1)
+                            mod_category = re.search('/modules/([^/]*)', dirpath)[1]
                         # store the resulting category statistics
-                        if not mod_category in self.loaded_category:
+                        if mod_category not in self.loaded_category:
                             self.loaded_category[mod_category] = 0
                         self.loaded_category[mod_category] += 1
 

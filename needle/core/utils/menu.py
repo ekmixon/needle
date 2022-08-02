@@ -35,10 +35,10 @@ def choose_from_list_data_protection(options, choose=True):
         fname, dp = val[0], val[1]
         fname = fname.strip(''''"''')
         col_start, col_end = Colors.G, Colors.N
-        if dp == 'NSFileProtectionNone':
-            col_start = Colors.R
         if dp == 'NSFileProtectionCompleteUntilFirstUserAuthentication':
             col_start = Colors.O
+        elif dp == 'NSFileProtectionNone':
+            col_start = Colors.R
         ll = '\t{num:<3} - [{CS}{dataprotection:<52}{CE}] {fname}'.format(num=num, dataprotection=dp, fname=fname,
                                                                           CS=col_start, CE=col_end)
         print(ll)
@@ -52,7 +52,7 @@ def choose_from_list_data_protection(options, choose=True):
 
 
 def choose_boolean(message):
-    question = "{} [y/N]: ".format(message)
+    question = f"{message} [y/N]: "
     choice = print_question(question)
     if choice.lower() == 'y': return True
     elif choice.lower() == 'n': return False

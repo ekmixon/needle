@@ -30,8 +30,8 @@ def launch_ui(args):
     # Instantiate the UI object
     x = cli.CLI(cli.Mode.CONSOLE)
     # check for and run version check
-    if args.check:
-        if not x.version_check(): return
+    if args.check and not x.version_check():
+        return
     # Check for and run script session
     if args.script_file:
         x.do_resource(args.script_file)

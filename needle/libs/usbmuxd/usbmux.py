@@ -42,14 +42,14 @@ class SafeStreamSocket:
 			sent = self.sock.send(msg[totalsent:])
 			if sent == 0:
 				raise MuxError("socket connection broken")
-			totalsent = totalsent + sent
+			totalsent += sent
 	def recv(self, size):
 		msg = ''
 		while len(msg) < size:
 			chunk = self.sock.recv(size-len(msg))
 			if chunk == '':
 				raise MuxError("socket connection broken")
-			msg = msg + chunk
+			msg += chunk
 		return msg
 
 class MuxDevice(object):
@@ -212,10 +212,7 @@ class MuxConnection(object):
 class USBMux(object):
 	def __init__(self, socketpath=None):
 		if socketpath is None:
-			if sys.platform == 'darwin':
-				socketpath = "/var/run/usbmuxd"
-			else:
-				socketpath = "/var/run/usbmuxd"
+			socketpath = "/var/run/usbmuxd"
 		self.socketpath = socketpath
 		self.listener = MuxConnection(socketpath, BinaryProtocol)
 		try:

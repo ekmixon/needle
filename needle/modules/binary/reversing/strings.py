@@ -30,10 +30,14 @@ class Module(BaseModule):
             {'name': 'ViewControllers', 'test': 'ViewController'},
         ]
         for tc in test_cases:
-            filtered = list(set(filter(lambda x: tc['test'] in x, str_list)))
-            if filtered:
+            if filtered := list(set(filter(lambda x: tc['test'] in x, str_list))):
                 # Save to file
-                outfile = '%s_%s' % (self.options['output'], tc['name']) if self.options['output'] else None
+                outfile = (
+                    f"{self.options['output']}_{tc['name']}"
+                    if self.options['output']
+                    else None
+                )
+
                 self.printer.notify(tc['name'])
                 self.print_cmd_output(filtered, outfile)
 
@@ -64,11 +68,9 @@ class Module(BaseModule):
                 query=query)
         out_2 = self.device.remote_op.command_blocking(cmd_2)
 
-        # Processing output
-        out = list(set(out_1 + out_2))
-        if out:
+        if out := list(set(out_1 + out_2)):
             # Save to file
-            outfile = self.options['output'] if self.options['output'] else None
+            outfile = self.options['output'] or None
             # Print to console
             self.printer.notify("The following strings have been found: ")
             self.print_cmd_output(out, outfile)

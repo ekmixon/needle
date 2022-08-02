@@ -25,8 +25,7 @@ class AsyncClient():
         self.socket.send(cmd + '\r\n')
         data = ""
         while True:
-            temp = self.socket.recv(8192)
-            if temp:
+            if temp := self.socket.recv(8192):
                 if marker in temp:
                     data += temp[:temp.find(marker)]
                     break
@@ -49,16 +48,24 @@ class NeedleAgent(object):
     # EXPORTED COMMANDS
     # ==================================================================================================================
     def connect(self):
-        self._device.printer.verbose("{} Connecting to agent ({}:{})...".format(Constants.AGENT_TAG, self._ip, self._port))
+        self._device.printer.verbose(
+            f"{Constants.AGENT_TAG} Connecting to agent ({self._ip}:{self._port})..."
+        )
+
         self.client = AsyncClient(self._ip, self._port)
-        self._device.printer.notify("{} Successfully connected to agent ({}:{})...".format(Constants.AGENT_TAG, self._ip, self._port))
+        self._device.printer.notify(
+            f"{Constants.AGENT_TAG} Successfully connected to agent ({self._ip}:{self._port})..."
+        )
 
     def disconnect(self):
         if self.client:
-            self._device.printer.verbose("{} Disconnecting from agent...".format(Constants.AGENT_TAG))
+            self._device.printer.verbose(
+                f"{Constants.AGENT_TAG} Disconnecting from agent..."
+            )
+
             self.client.close()
 
     @Retry()
     def exec_command_agent(self, cmd):
-        self._device.printer.debug("{} Executing command: {}".format(Constants.AGENT_TAG, cmd))
+        self._device.printer.debug(f"{Constants.AGENT_TAG} Executing command: {cmd}")
         return self.client.send_to_device(cmd)

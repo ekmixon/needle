@@ -21,7 +21,10 @@ class Module(BaseModule):
         self.options['output'] = self.local_op.build_output_path_for_file("syslog.txt", self)
         # Setting default filter
         if self.APP_METADATA:
-            self.printer.info('Setting filter to: %s (you can change it in options)' % self.APP_METADATA['binary_name'])
+            self.printer.info(
+                f"Setting filter to: {self.APP_METADATA['binary_name']} (you can change it in options)"
+            )
+
             self.options['filter'] = self.APP_METADATA['binary_name']
 
     def module_pre(self):

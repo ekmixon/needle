@@ -22,7 +22,10 @@ class App(object):
         metadata_agent = self.__parse_from_agent()
 
         # Content of the app's local Info.plist
-        plist_info_path = Utils.escape_path('%s/Info.plist' % metadata_agent['binary_directory'], escape_accent=True)
+        plist_info_path = Utils.escape_path(
+            f"{metadata_agent['binary_directory']}/Info.plist", escape_accent=True
+        )
+
         plist_info = self._device.remote_op.parse_plist(plist_info_path)
         metadata_info = self.__parse_plist_info(plist_info)
 
@@ -65,8 +68,7 @@ class App(object):
         signer_identity  = self.__extract_field(agent_info, 'SignerIdentity')
         uuid = bundle_directory.rsplit('/', 1)[-1]
 
-        # Pack into a dict
-        metadata = {
+        return {
             'name': name,
             'bundle_type': bundle_type,
             'bundle_id': bundle_id,
@@ -79,9 +81,8 @@ class App(object):
             'minimum_os': minimum_os,
             'team_id': team_id,
             'signer_identity': signer_identity,
-            'uuid': uuid
+            'uuid': uuid,
         }
-        return metadata
 
     def __parse_plist_info(self, plist):
         # Parse the Info.plist file
@@ -89,16 +90,15 @@ class App(object):
         bundle_exe = self.__extract_field(plist, 'CFBundleExecutable')
         bundle_id = self.__extract_field(plist, 'CFBundleIdentifier')
         bundle_package_type = self.__extract_field(plist, 'CFBundlePackageType')
-        bundle_version = "{} ({})".format(self.__extract_field(plist, 'CFBundleVersion'),
-                                          self.__extract_field(plist, 'CFBundleShortVersionString'))
+        bundle_version = f"{self.__extract_field(plist, 'CFBundleVersion')} ({self.__extract_field(plist, 'CFBundleShortVersionString')})"
+
         platform_version = self.__extract_field(plist, 'DTPlatformVersion')
         ats_settings = self.__extract_field(plist, 'NSAppTransportSecurity')
         try:
             url_handlers = [url['CFBundleURLSchemes'] for url in plist['CFBundleURLTypes']]
         except:
             url_handlers = None
-        # Pack into a dict
-        metadata = {
+        return {
             'bundle_displayname': bundle_displayname,
             'bundle_exe': bundle_exe,
             'bundle_id': bundle_id,
@@ -108,7 +108,6 @@ class App(object):
             'url_handlers': url_handlers,
             'ats_settings': ats_settings,
         }
-        return metadata
 
     def __detect_architectures(self, binary):
         """Use lipo to detect supported architectures."""
@@ -117,8 +116,7 @@ class App(object):
         out = self._device.remote_op.command_blocking(cmd, internal=True)
         # Parse output
         msg = out[0].strip()
-        res = msg.rsplit(': ')[-1].split(' ')
-        return res
+        return msg.rsplit(': ')[-1].split(' ')
 
     def __extract_field(self, data, field, path=False, urldecode=False):
         """Extract the specified entry from the plist file. Returns empty string if not present."""
@@ -147,9 +145,8 @@ class App(object):
         plugin_dir = os.path.join(binary_directory, "PlugIns")
         if self._device.remote_op.dir_exist(plugin_dir):
             return self._retrieve_extensions(plugin_dir)
-        else:
-            self._device.printer.debug("No Plugins found")
-            return None
+        self._device.printer.debug("No Plugins found")
+        return None
 
     def _retrieve_extensions(self, plugin_dir):
         # Find plugins
@@ -191,7 +188,7 @@ class App(object):
                 process_list = filter(lambda x: '/var/containers' in x, out)
             process = process_list[0].strip()
             pid = process.split(' ')[0]
-            self._device.printer.verbose('PID found: %s' % pid)
+            self._device.printer.verbose(f'PID found: {pid}')
             return pid
         except Exception as e:
             raise Exception("PID not found")
@@ -223,7 +220,7 @@ class App(object):
 
             if msg:
                 self._device.printer.error('Clutch2 could not be run successfully so the binary could not be decrypted')
-                raise Exception('Please confirm that Clutch2 is {}'.format(msg))
+                raise Exception(f'Please confirm that Clutch2 is {msg}')
             else:
                 self._device.printer.warning('The app might be already decrypted. Trying to retrieve the IPA...')
 
@@ -232,15 +229,13 @@ class App(object):
                                                       bundle=app_metadata['bundle_id'],
                                                       out=fname_decrypted)
             out = self._device.remote_op.command_blocking(cmd)
-        self._device.printer.debug("Decrypted IPA stored at: %s" % fname_decrypted)
+        self._device.printer.debug(f"Decrypted IPA stored at: {fname_decrypted}")
 
         # Unzip IPA and get binary path
         fname_binary = self.unpack_ipa(app_metadata, fname_decrypted)
 
         # Thin the binary
-        if thin:
-            return self.thin_binary(app_metadata, fname_binary)
-        return fname_binary
+        return self.thin_binary(app_metadata, fname_binary) if thin else fname_binary
 
     def thin_binary(self, app_metadata, fname_binary, arch=Constants.PREFERRED_ARCH):
         self._device.printer.info("Thinning the binary...")
@@ -251,10 +246,13 @@ class App(object):
                                                                     output=fname_thinned,
                                                                     binary=fname_binary)
             self._device.remote_op.command_blocking(cmd)
-            self._device.printer.debug("Thinned IPA stored at: %s" % fname_thinned)
+            self._device.printer.debug(f"Thinned IPA stored at: {fname_thinned}")
             return fname_thinned
         else:
-            self._device.printer.warning('Binary does not include the requested architecture ({}). Skipping...'.format(arch))
+            self._device.printer.warning(
+                f'Binary does not include the requested architecture ({arch}). Skipping...'
+            )
+
             return fname_binary
 
     # ==================================================================================================================
@@ -262,8 +260,8 @@ class App(object):
     # ==================================================================================================================
     def unpack_ipa(self, app_metadata, ipa_fname):
         # Leftovers Cleanup
-        payload_folder = '%s%s' % (self._device.TEMP_FOLDER, 'Payload')
-        itunes = '%s%s' % (self._device.TEMP_FOLDER, 'iTunesArtwork')
+        payload_folder = f'{self._device.TEMP_FOLDER}Payload'
+        itunes = f'{self._device.TEMP_FOLDER}iTunesArtwork'
         if self._device.remote_op.dir_exist(payload_folder): self._device.remote_op.dir_delete(payload_folder)
         if self._device.remote_op.file_exist(itunes): self._device.remote_op.file_delete(itunes)
 
@@ -280,7 +278,10 @@ class App(object):
                                                                  appname=app_metadata['binary_name'])
         out = self._device.remote_op.command_blocking(cmd)
         fname_binary = out[0].strip()
-        self._device.printer.debug("Full path of the application binary: %s" % fname_binary)
+        self._device.printer.debug(
+            f"Full path of the application binary: {fname_binary}"
+        )
+
         return fname_binary
 
     # ==================================================================================================================
@@ -291,8 +292,13 @@ class App(object):
         computed = []
         for el in filelist:
             fname = Utils.escape_path(el.strip())
-            dp = '{bin} -f {fname}'.format(bin=self._device.DEVICE_TOOLS['FILEDP'], fname=fname)
-            dp += ' 2>&1'                                            # needed because by default FileDP prints to STDERR
+            dp = (
+                '{bin} -f {fname}'.format(
+                    bin=self._device.DEVICE_TOOLS['FILEDP'], fname=fname
+                )
+                + ' 2>&1'
+            )
+
             res = self._device.remote_op.command_blocking(dp, internal=True)
             # Parse class
             cl = res[0].rsplit(None, 1)[-1]

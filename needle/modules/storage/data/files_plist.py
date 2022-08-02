@@ -31,10 +31,10 @@ class Module(BaseModule):
     def save_file(self, remote_name, local_name, silent):
         """Convert the plist file to XML and save it locally"""
         # Parse the plist
-        self.printer.debug("Dumping content of the file: {}".format(remote_name))
+        self.printer.debug(f"Dumping content of the file: {remote_name}")
         pl = self.device.remote_op.parse_plist(remote_name)
         # Prepare path
-        local_name = 'plist_{}'.format(local_name)
+        local_name = f'plist_{local_name}'
         plist_path = self.local_op.build_output_path_for_file(local_name, self)
         # Print & Save to file
         outfile = str(plist_path) if self.options['output'] else None

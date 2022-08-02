@@ -170,6 +170,12 @@ if (ObjC.available) {
         if self.results:
             self.printer.info("Keychain Items:")
             self.print_cmd_output()
-            self.add_issue('Keychain items detected ({})'.format(len(self.results)), None, 'INVESTIGATE', self.options['output'])
+            self.add_issue(
+                f'Keychain items detected ({len(self.results)})',
+                None,
+                'INVESTIGATE',
+                self.options['output'],
+            )
+
         else:
             self.printer.warning("No items found.")

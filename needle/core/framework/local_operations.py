@@ -69,11 +69,14 @@ class LocalOperations(object):
             "It is already a directory"
             if not self.dir_exist(path):
                 # Folder does not exist, create it
-                self.printer.debug("Creating folder: {}".format(path))
+                self.printer.debug(f"Creating folder: {path}")
                 self.dir_create(path)
             elif not self.dir_is_empty(path):
                 # Folder exist, and is not empty
-                self.printer.warning("Attention! The folder chosen to store the output is not empty: {}".format(path))
+                self.printer.warning(
+                    f"Attention! The folder chosen to store the output is not empty: {path}"
+                )
+
                 self.printer.warning("Do you want to erase its content first?")
                 self.printer.warning("Y: the content will be deleted")
                 self.printer.warning("N: no action will be taken (destination files might be overwritten in case of filename clash)")
@@ -87,7 +90,7 @@ class LocalOperations(object):
     # ==================================================================================================================
     def command_subproc_start(self, cmd):
         """Run a command in a subprocess and resume execution immediately."""
-        self.printer.debug('[LOCAL CMD] Local Subprocess Command: %s' % cmd)
+        self.printer.debug(f'[LOCAL CMD] Local Subprocess Command: {cmd}')
         DEVNULL = open(os.devnull, 'w')
         proc = subprocess.Popen(cmd.split(), stdout=DEVNULL, stderr=subprocess.STDOUT)
         time.sleep(2)
@@ -95,25 +98,27 @@ class LocalOperations(object):
 
     def command_subproc_stop(self, proc):
         """Stop a running subprocess."""
-        self.printer.debug('[LOCAL CMD] Stopping Local Subprocess Command [pid: %s]' % proc.pid)
+        self.printer.debug(
+            f'[LOCAL CMD] Stopping Local Subprocess Command [pid: {proc.pid}]'
+        )
+
         proc.terminate()
 
     def command_blocking(self, cmd):
         """Run a blocking command: wait for its completion before resuming execution."""
-        self.printer.debug('[LOCAL CMD] Local Command: %s' % cmd)
+        self.printer.debug(f'[LOCAL CMD] Local Command: {cmd}')
         proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         stdout, stderr = proc.stdout.read(), proc.stderr.read()
         return stdout, stderr
 
     def command_interactive(self, cmd):
         """Run an interactive command: which requires an interactive shell."""
-        self.printer.debug("[LOCAL CMD] Local Interactive Command: %s" % cmd)
-        out = subprocess.call(cmd, shell=True)
-        return out
+        self.printer.debug(f"[LOCAL CMD] Local Interactive Command: {cmd}")
+        return subprocess.call(cmd, shell=True)
 
     def command_background_start(self, cmd):
         """Run a background command: run it in a new thread and resume execution immediately."""
-        self.printer.debug('[LOCAL CMD] Local Background Command: %s' % cmd)
+        self.printer.debug(f'[LOCAL CMD] Local Background Command: {cmd}')
 
         def daemon(cmd):
             """Daemon used to run the command so to avoid blocking the UI"""
@@ -122,6 +127,8 @@ class LocalOperations(object):
             proc = subprocess.Popen(cmd, shell=True, stdout=slave, stderr=slave, close_fds=True)
             stdout = os.fdopen(master)
             self.printer.info("Monitoring in background...Kill this process when you want to see the dumped content")
+
+        # Run command in a thread
 
         # Run command in a thread
         d = threading.Thread(name='daemon', target=daemon, args=(cmd,))
@@ -168,7 +175,7 @@ class LocalOperations(object):
 
     def write_file(self, fname, body):
         """Given a filename, write body into it."""
-        self.printer.debug("Writing to file: {}".format(fname))
+        self.printer.debug(f"Writing to file: {fname}")
         with open(fname, "w") as fp:
             fp.write(body)
 
@@ -178,12 +185,15 @@ class LocalOperations(object):
         # Create Folders
         if not os.path.exists(output):
             # Folder does not exist, create it
-            self.printer.debug("Creating local output folder: {}".format(output))
+            self.printer.debug(f"Creating local output folder: {output}")
             os.makedirs(output)
         elif os.listdir(output):
             if not module._global_options['skip_output_folder_check']:
                 # Folder exist, and is not empty
-                self.printer.warning("Attention! The folder chosen to store local output is not empty: {}".format(output))
+                self.printer.warning(
+                    f"Attention! The folder chosen to store local output is not empty: {output}"
+                )
+
                 self.printer.warning("Do you want to back it up first?")
                 self.printer.warning("Y: the content will be archived in a different location, then the folder will be emptied")
                 self.printer.warning("N: no action will be taken (destination files might be overwritten in case of filename clash)")
@@ -196,13 +206,16 @@ class LocalOperations(object):
     def output_folder_backup(self, module):
         """Backup the local output folder"""
         folder_active = module._global_options['output_folder']
-        folder_backup = os.path.join(Constants.FOLDER_BACKUP,
-                                     'needle-output_{}'.format(datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')))
+        folder_backup = os.path.join(
+            Constants.FOLDER_BACKUP,
+            f"needle-output_{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}",
+        )
+
         self.printer.verbose("Archiving local output folder: {active} --> {backup}".format(active=folder_active,
                                                                                            backup=folder_backup))
-        self.printer.debug("Copying: {} -> {}".format(folder_active, folder_backup))
+        self.printer.debug(f"Copying: {folder_active} -> {folder_backup}")
         self.dir_copy(folder_active, folder_backup)
-        self.printer.debug("Deleting: {}".format(folder_active))
+        self.printer.debug(f"Deleting: {folder_active}")
         self.dir_delete(folder_active)
         self.output_folder_setup(module)
 
